@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flava</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* 顶部标题栏 - 变窄 */
+        .top-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: rgba(65, 65, 65, 0.7);
+            z-index: 4;
+            display: flex;
+            align-items: center;
+            padding-left: 15px;
+            gap: 12px; /* 图标和文字间距 */
+        }
+
+        /* 三条杠图标 - 更小，直角 */
+        .menu-icon {
+            width: 16px; /* 更小：从20px改为16px */
+            height: 12px; /* 更小：从14px改为12px */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            flex-shrink: 0; /* 防止被压缩 */
+        }
+
+        .menu-icon span {
+            width: 100%;
+            height: 1.5px; /* 更细：从2px改为1.5px */
+            background: #fff;
+            border-radius: 0; /* 直角 */
+        }
+
+        /* 新增：右侧文字 Eeeee */
+        .nav-text {
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            position: fixed;
+            top: 40px;
+            left: -150px;
+            width: 150px;
+            height: calc(100vh - 40px);
+            background: rgba(65, 65, 65, 0.5);
+            z-index: 4;
+            transition: left 0.3s ease;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        /* 侧边栏按钮 - 方形文字样式 */
+        .sidebar-btn {
+            display: block;
+            width: 100%;
+            padding: 8px 0;
+            margin-bottom: 5px;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-align: left;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .sidebar-btn:hover {
+            color: #ff4500;
+        }
+
+        /* 上半部分 */
+        .top-section {
+            height: 60vh;
+            background-color: #000;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding-left: 10%;
+            overflow: hidden;
+            padding-top: 40px;
+        }
+
+        /* 网格画布 */
+        .grid-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* 火焰画布 */
+        .fire-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            background-color: transparent;
+        }
+
+        /* 文字 AAAAA */
+        .main-text {
+            font-size: 2rem;
+            color: #fff;
+            z-index: 3;
+            position: relative;
+            letter-spacing: 4px;
+            text-shadow: 0 0 20px rgba(255, 69, 0, 0.8);
+        }
+
+        /* 按钮容器 */
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            z-index: 3;
+            position: relative;
+        }
+
+        /* 橙色圆角按钮 */
+        .btn {
+            padding: 8px 22px;
+            background: linear-gradient(135deg, #ff6347, #ff4500);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 69, 0, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 69, 0, 0.6);
+        }
+
+        /* 下半部分 */
+        .bottom-section {
+            min-height: 40vh;
+            background-color: #000;
+            position: relative;
+            padding: 40px 10%;
+        }
+
+        /* 白色遮罩 */
+        .white-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.85);
+            z-index: 1;
+        }
+
+        /* 底部测试文字 */
+        .test-text {
+            position: relative;
+            z-index: 2;
+            color: #333;
+            line-height: 1.8;
+            font-size: 1rem;
+        }
+
+        .test-text h2 {
+            color: #ff4500;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .test-text p {
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部标题栏 -->
+    <div class="top-navbar">
+        <div class="menu-icon" id="menuIcon">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="nav-text">Eeeee</div> <!-- 新增文字 -->
+    </div>
+
+    <!-- 侧边栏 -->
+    <div class="sidebar" id="sidebar">
+        <a href="https://www.baidu.com" target="_blank" class="sidebar-btn">下载</a>
+        <a href="https://www.baidu.com" target="_blank" class="sidebar-btn">文档</a>
+        <a href="https://www.baidu.com" target="_blank" class="sidebar-btn">拓展下载</a>
+        <a href="https://www.baidu.com" target="_blank" class="sidebar-btn">我的b站主页</a>
+    </div>
+
+    <!-- 上半部分 -->
+    <section class="top-section">
+        <canvas id="gridCanvas" class="grid-canvas"></canvas>
+        <canvas id="fireCanvas" class="fire-canvas"></canvas>
+        
+        <div class="main-text">Flava</div>
+        
+        <div class="button-group">
+            <button class="btn">下载最新版</button>
+            <button class="btn">下载历史版本</button>
+        </div>
+    </section>
+
+    <!-- 下半部分 -->
+    <section class="bottom-section">
+        <div class="white-overlay"></div>
+        
+        <div class="test-text">
+            <p>nullptr</p>
+        </div>
+    </section>
+
+    <script>
+        const fireCanvas = document.getElementById('fireCanvas');
+        const gridCanvas = document.getElementById('gridCanvas');
+        const fireCtx = fireCanvas.getContext('2d');
+        const gridCtx = gridCanvas.getContext('2d');
+        
+        // 侧边栏交互
+        const menuIcon = document.getElementById('menuIcon');
+        const sidebar = document.getElementById('sidebar');
+
+        menuIcon.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+
+        // 设置画布尺寸
+        function resizeCanvas() {
+            fireCanvas.width = fireCanvas.offsetWidth;
+            fireCanvas.height = fireCanvas.offsetHeight;
+            gridCanvas.width = gridCanvas.offsetWidth;
+            gridCanvas.height = gridCanvas.offsetHeight;
+            initFirePoints();
+            initBackgroundGlows();
+            initParticles();
+            drawGrid();
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        
+        // 火焰点数组
+        let redPoints = [];
+        let orangePoints = [];
+        let yellowPoints = [];
+        
+        // 背景光晕数组
+        let backgroundGlows = [];
+        
+        // 粒子数组
+        let particles = [];
+        
+        // 绘制网格
+        function drawGrid() {
+            gridCtx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
+            
+            gridCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            gridCtx.lineWidth = 2;
+            gridCtx.globalAlpha = 0.2;
+            
+            gridCtx.save();
+            
+            gridCtx.translate(gridCanvas.width / 2, gridCanvas.height / 2);
+            gridCtx.rotate(30 * Math.PI / 180);
+            
+            const diagonal = Math.sqrt(gridCanvas.width * gridCanvas.width + gridCanvas.height * gridCanvas.height);
+            const start = -diagonal;
+            const end = diagonal;
+            
+            for (let x = start; x <= end; x += 10) {
+                gridCtx.beginPath();
+                gridCtx.moveTo(x, start);
+                gridCtx.lineTo(x, end);
+                gridCtx.stroke();
+            }
+            
+            for (let y = start; y <= end; y += 10) {
+                gridCtx.beginPath();
+                gridCtx.moveTo(start, y);
+                gridCtx.lineTo(end, y);
+                gridCtx.stroke();
+            }
+            
+            gridCtx.restore();
+            gridCtx.globalAlpha = 1.0;
+        }
+        
+        // 初始化背景光晕
+        function initBackgroundGlows() {
+            backgroundGlows = [];
+            const glowCount = 15;
+            
+            for (let i = 0; i < glowCount; i++) {
+                backgroundGlows.push({
+                    x: Math.random() * fireCanvas.width,
+                    y: Math.random() * fireCanvas.height * 0.8 + fireCanvas.height * 0.1,
+                    radius: Math.random() * fireCanvas.width * 0.25 + fireCanvas.width * 0.1,
+                    color: Math.random() > 0.5 ? 'rgba(255, 80, 0, 0.12)' : 'rgba(255, 150, 0, 0.08)',
+                    velocityX: (Math.random() - 0.5) * 2.0,
+                    velocityY: (Math.random() - 0.5) * 1.5,
+                    maxVelocity: 4.0,
+                    minVelocity: -4.0,
+                    changeCounter: 0,
+                    changeInterval: Math.floor(Math.random() * 30) + 15,
+                    accelerationRate: Math.random() * 0.3 + 0.1
+                });
+            }
+        }
+        
+        // 初始化火焰点
+        function initFirePoints() {
+            redPoints = [];
+            orangePoints = [];
+            yellowPoints = [];
+            
+            const numPoints = 10;
+            const segmentWidth = fireCanvas.width / (numPoints - 1);
+            
+            for (let i = 0; i < numPoints; i++) {
+                const x = i * segmentWidth;
+                const baseHeight = fireCanvas.height * 0.65;
+                const randomFactor = Math.random() * 0.3 + 0.3;
+                const y = baseHeight - (randomFactor * fireCanvas.height * 0.5);
+                
+                redPoints.push({ 
+                    x, 
+                    y,
+                    baseY: y,
+                    velocity: (Math.random() - 0.5) * 1.5,
+                    maxVelocity: 4.0,
+                    minVelocity: -4.0,
+                    changeCounter: 0,
+                    changeInterval: Math.floor(Math.random() * 80) + 40
+                });
+            }
+            
+            for (let i = 0; i < numPoints; i++) {
+                const redPoint = redPoints[i];
+                const baseOffsetY = Math.random() * fireCanvas.height * 0.2 + fireCanvas.height * 0.15;
+                const baseOffsetX = Math.random() * 25 - 12;
+                
+                orangePoints.push({
+                    x: redPoint.x + baseOffsetX,
+                    y: redPoint.baseY + baseOffsetY,
+                    baseY: redPoint.baseY,
+                    baseOffsetY: baseOffsetY,
+                    baseOffsetX: baseOffsetX,
+                    offsetY: baseOffsetY,
+                    offsetX: baseOffsetX,
+                    velocityOffsetY: (Math.random() - 0.5) * 0.2,
+                    velocityOffsetX: (Math.random() - 0.5) * 0.1,
+                    maxVelocityOffset: 0.3,
+                    minVelocityOffset: -0.3,
+                    changeCounter: 0,
+                    changeInterval: Math.floor(Math.random() * 90) + 45
+                });
+            }
+            
+            for (let i = 0; i < numPoints; i++) {
+                const redPoint = redPoints[i];
+                const baseOffsetY = Math.random() * fireCanvas.height * 0.25 + fireCanvas.height * 0.2;
+                const baseOffsetX = Math.random() * 35 - 17;
+                
+                yellowPoints.push({
+                    x: redPoint.x + baseOffsetX,
+                    y: redPoint.baseY + baseOffsetY,
+                    baseY: redPoint.baseY,
+                    baseOffsetY: baseOffsetY,
+                    baseOffsetX: baseOffsetX,
+                    offsetY: baseOffsetY,
+                    offsetX: baseOffsetX,
+                    velocityOffsetY: (Math.random() - 0.5) * 0.3,
+                    velocityOffsetX: (Math.random() - 0.5) * 0.2,
+                    maxVelocityOffset: 0.5,
+                    minVelocityOffset: -0.5,
+                    changeCounter: 0,
+                    changeInterval: Math.floor(Math.random() * 100) + 50
+                });
+            }
+        }
+        
+        // 初始化粒子
+        function initParticles() {
+            particles = [];
+            const particleCount = 20;
+            
+            for (let i = 0; i < particleCount; i++) {
+                createParticle();
+            }
+        }
+        
+        // 创建单个粒子
+        function createParticle() {
+            const colors = [
+                'rgba(255, 80, 0, 0.6)',
+                'rgba(255, 100, 0, 0.5)',
+                'rgba(255, 120, 0, 0.4)',
+                'rgba(255, 140, 0, 0.3)',
+                'rgba(255, 160, 0, 0.2)'
+            ];
+            
+            particles.push({
+                x: Math.random() * fireCanvas.width,
+                y: fireCanvas.height + Math.random() * 50,
+                size: Math.random() * 5 + 1,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                velocityY: -(Math.random() * 3 + 1.5),
+                velocityX: (Math.random() - 0.5) * 1.0,
+                life: 1.0,
+                decay: Math.random() * 0.008 + 0.003,
+                wobble: Math.random() * 0.1,
+                wobbleSpeed: Math.random() * 0.05 + 0.02
+            });
+        }
+        
+        // 绘制火焰
+        function drawFire() {
+            fireCtx.clearRect(0, 0, fireCanvas.width, fireCanvas.height);
+            
+            backgroundGlows.forEach(glow => {
+                const gradient = fireCtx.createRadialGradient(
+                    glow.x, glow.y, 0,
+                    glow.x, glow.y, glow.radius
+                );
+                gradient.addColorStop(0, glow.color);
+                gradient.addColorStop(0.5, glow.color.replace('0.12', '0.06').replace('0.08', '0.04'));
+                gradient.addColorStop(1, 'transparent');
+                
+                fireCtx.fillStyle = gradient;
+                fireCtx.beginPath();
+                fireCtx.arc(glow.x, glow.y, glow.radius, 0, Math.PI * 2);
+                fireCtx.fill();
+            });
+            
+            updateFlameVelocities();
+            updateFlamePositions();
+            updateGlowPositions();
+            
+            // 红色火焰
+            fireCtx.beginPath();
+            fireCtx.moveTo(redPoints[0].x, redPoints[0].y);
+            
+            for (let i = 1; i < redPoints.length; i++) {
+                fireCtx.lineTo(redPoints[i].x, redPoints[i].y);
+            }
+            
+            fireCtx.lineTo(fireCanvas.width, fireCanvas.height);
+            fireCtx.lineTo(0, fireCanvas.height);
+            fireCtx.closePath();
+            
+            const redGradient = fireCtx.createLinearGradient(0, 0, 0, fireCanvas.height);
+            redGradient.addColorStop(0, 'rgba(255, 40, 0, 0.4)');
+            redGradient.addColorStop(0.5, 'rgba(220, 20, 60, 0.35)');
+            redGradient.addColorStop(1, 'rgba(180, 0, 0, 0.3)');
+            
+            fireCtx.fillStyle = redGradient;
+            fireCtx.fill();
+            
+            // 橙色火焰
+            fireCtx.beginPath();
+            fireCtx.moveTo(orangePoints[0].x, orangePoints[0].y);
+            
+            for (let i = 1; i < orangePoints.length; i++) {
+                fireCtx.lineTo(orangePoints[i].x, orangePoints[i].y);
+            }
+            
+            fireCtx.lineTo(fireCanvas.width, fireCanvas.height);
+            fireCtx.lineTo(0, fireCanvas.height);
+            fireCtx.closePath();
+            
+            const orangeGradient = fireCtx.createLinearGradient(0, 0, 0, fireCanvas.height);
+            orangeGradient.addColorStop(0, 'rgba(255, 140, 0, 0.3)');
+            orangeGradient.addColorStop(0.5, 'rgba(255, 100, 0, 0.25)');
+            orangeGradient.addColorStop(1, 'rgba(255, 80, 0, 0.2)');
+            
+            fireCtx.fillStyle = orangeGradient;
+            fireCtx.fill();
+            
+            // 黄色火焰
+            fireCtx.beginPath();
+            fireCtx.moveTo(yellowPoints[0].x, yellowPoints[0].y);
+            
+            for (let i = 1; i < yellowPoints.length; i++) {
+                fireCtx.lineTo(yellowPoints[i].x, yellowPoints[i].y);
+            }
+            
+            fireCtx.lineTo(fireCanvas.width, fireCanvas.height);
+            fireCtx.lineTo(0, fireCanvas.height);
+            fireCtx.closePath();
+            
+            const yellowGradient = fireCtx.createLinearGradient(0, 0, 0, fireCanvas.height);
+            yellowGradient.addColorStop(0, 'rgba(255, 240, 50, 0.25)');
+            yellowGradient.addColorStop(0.5, 'rgba(255, 200, 0, 0.2)');
+            yellowGradient.addColorStop(1, 'rgba(255, 150, 0, 0.15)');
+            
+            fireCtx.fillStyle = yellowGradient;
+            fireCtx.fill();
+            
+            updateAndDrawParticles();
+        }
+        
+        // 更新和绘制粒子
+        function updateAndDrawParticles() {
+            particles = particles.filter(particle => particle.life > 0);
+            
+            if (particles.length < 80) {
+                const newParticles = Math.floor(Math.random() * 2) + 1;
+                for (let i = 0; i < newParticles; i++) {
+                    createParticle();
+                }
+            }
+            
+            particles.forEach(particle => {
+                particle.x += particle.velocityX + Math.sin(Date.now() * particle.wobbleSpeed) * particle.wobble;
+                particle.y += particle.velocityY;
+                
+                particle.life -= particle.decay;
+                
+                fireCtx.globalAlpha = particle.life;
+                fireCtx.fillStyle = particle.color;
+                fireCtx.beginPath();
+                fireCtx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                fireCtx.fill();
+                fireCtx.globalAlpha = 1.0;
+            });
+        }
+        
+        // 更新火焰点的速度
+        function updateFlameVelocities() {
+            redPoints.forEach(point => {
+                point.changeCounter++;
+                
+                if (point.changeCounter >= point.changeInterval) {
+                    point.changeCounter = 0;
+                    point.changeInterval = Math.floor(Math.random() * 80) + 40;
+                    
+                    const acceleration = (Math.random() - 0.5) * 0.8;
+                    point.velocity += acceleration;
+                }
+                
+                const minY = point.baseY - 120;
+                const maxY = point.baseY + 120;
+                
+                if (point.y > maxY - 30) {
+                    point.velocity -= 0.3;
+                }
+                if (point.y < minY + 30) {
+                    point.velocity += 0.3;
+                }
+                
+                point.velocity = Math.max(point.minVelocity, Math.min(point.maxVelocity, point.velocity));
+                point.velocity *= 0.99;
+            });
+            
+            orangePoints.forEach(point => {
+                point.changeCounter++;
+                
+                if (point.changeCounter >= point.changeInterval) {
+                    point.changeCounter = 0;
+                    point.changeInterval = Math.floor(Math.random() * 90) + 45;
+                    
+                    const accelerationY = (Math.random() - 0.5) * 0.15;
+                    const accelerationX = (Math.random() - 0.5) * 0.08;
+                    point.velocityOffsetY += accelerationY;
+                    point.velocityOffsetX += accelerationX;
+                }
+                
+                const minOffsetY = point.baseOffsetY - 15;
+                const maxOffsetY = point.baseOffsetY + 15;
+                const minOffsetX = point.baseOffsetX - 10;
+                const maxOffsetX = point.baseOffsetX + 10;
+                
+                if (point.offsetY > maxOffsetY - 5) {
+                    point.velocityOffsetY -= 0.08;
+                }
+                if (point.offsetY < minOffsetY + 5) {
+                    point.velocityOffsetY += 0.08;
+                }
+                
+                if (point.offsetX > maxOffsetX - 5) {
+                    point.velocityOffsetX -= 0.04;
+                }
+                if (point.offsetX < minOffsetX + 5) {
+                    point.velocityOffsetX += 0.04;
+                }
+                
+                point.velocityOffsetY = Math.max(point.minVelocityOffset, Math.min(point.maxVelocityOffset, point.velocityOffsetY));
+                point.velocityOffsetX = Math.max(point.minVelocityOffset, Math.min(point.maxVelocityOffset, point.velocityOffsetX));
+                
+                point.velocityOffsetY *= 0.98;
+                point.velocityOffsetX *= 0.98;
+            });
+            
+            yellowPoints.forEach(point => {
+                point.changeCounter++;
+                
+                if (point.changeCounter >= point.changeInterval) {
+                    point.changeCounter = 0;
+                    point.changeInterval = Math.floor(Math.random() * 100) + 50;
+                    
+                    const accelerationY = (Math.random() - 0.5) * 0.2;
+                    const accelerationX = (Math.random() - 0.5) * 0.1;
+                    point.velocityOffsetY += accelerationY;
+                    point.velocityOffsetX += accelerationX;
+                }
+                
+                const minOffsetY = point.baseOffsetY - 20;
+                const maxOffsetY = point.baseOffsetY + 20;
+                const minOffsetX = point.baseOffsetX - 15;
+                const maxOffsetX = point.baseOffsetX + 15;
+                
+                if (point.offsetY > maxOffsetY - 5) {
+                    point.velocityOffsetY -= 0.1;
+                }
+                if (point.offsetY < minOffsetY + 5) {
+                    point.velocityOffsetY += 0.1;
+                }
+                
+                if (point.offsetX > maxOffsetX - 5) {
+                    point.velocityOffsetX -= 0.05;
+                }
+                if (point.offsetX < minOffsetX + 5) {
+                    point.velocityOffsetX += 0.05;
+                }
+                
+                point.velocityOffsetY = Math.max(point.minVelocityOffset, Math.min(point.maxVelocityOffset, point.velocityOffsetY));
+                point.velocityOffsetX = Math.max(point.minVelocityOffset, Math.min(point.maxVelocityOffset, point.velocityOffsetX));
+                
+                point.velocityOffsetY *= 0.98;
+                point.velocityOffsetX *= 0.98;
+            });
+        }
+        
+        // 更新火焰点的位置
+        function updateFlamePositions() {
+            redPoints.forEach(point => {
+                point.y += point.velocity;
+                
+                const minY = point.baseY - 120;
+                const maxY = point.baseY + 120;
+                point.y = Math.max(minY, Math.min(maxY, point.y));
+            });
+            
+            orangePoints.forEach((point, index) => {
+                const redPoint = redPoints[index];
+                
+                point.offsetY += point.velocityOffsetY;
+                point.offsetX += point.velocityOffsetX;
+                
+                const minOffsetY = point.baseOffsetY - 15;
+                const maxOffsetY = point.baseOffsetY + 15;
+                const minOffsetX = point.baseOffsetX - 10;
+                const maxOffsetX = point.baseOffsetX + 10;
+                
+                point.offsetY = Math.max(minOffsetY, Math.min(maxOffsetY, point.offsetY));
+                point.offsetX = Math.max(minOffsetX, Math.min(maxOffsetX, point.offsetX));
+                
+                point.x = redPoint.x + point.offsetX;
+                point.y = redPoint.y + point.offsetY;
+            });
+            
+            yellowPoints.forEach((point, index) => {
+                const redPoint = redPoints[index];
+                
+                point.offsetY += point.velocityOffsetY;
+                point.offsetX += point.velocityOffsetX;
+                
+                const minOffsetY = point.baseOffsetY - 20;
+                const maxOffsetY = point.baseOffsetY + 20;
+                const minOffsetX = point.baseOffsetX - 15;
+                const maxOffsetX = point.baseOffsetX + 15;
+                
+                point.offsetY = Math.max(minOffsetY, Math.min(maxOffsetY, point.offsetY));
+                point.offsetX = Math.max(minOffsetX, Math.min(maxOffsetX, point.offsetX));
+                
+                point.x = redPoint.x + point.offsetX;
+                point.y = redPoint.y + point.offsetY;
+            });
+        }
+        
+        // 更新背景光晕的位置
+        function updateGlowPositions() {
+            backgroundGlows.forEach(glow => {
+                glow.changeCounter++;
+                
+                if (glow.changeCounter >= glow.changeInterval) {
+                    glow.changeCounter = 0;
+                    glow.changeInterval = Math.floor(Math.random() * 30) + 15;
+                    
+                    const accelX = (Math.random() - 0.5) * glow.accelerationRate;
+                    const accelY = (Math.random() - 0.5) * glow.accelerationRate;
+                    glow.velocityX += accelX;
+                    glow.velocityY += accelY;
+                }
+                
+                glow.velocityX = Math.max(glow.minVelocity, Math.min(glow.maxVelocity, glow.velocityX));
+                glow.velocityY = Math.max(glow.minVelocity, Math.min(glow.maxVelocity, glow.velocityY));
+                
+                glow.velocityX *= 0.98;
+                glow.velocityY *= 0.98;
+                
+                glow.x += glow.velocityX;
+                glow.y += glow.velocityY;
+                
+                if (glow.x < 0 || glow.x > fireCanvas.width) {
+                    glow.velocityX *= -0.8;
+                    glow.x = Math.max(0, Math.min(fireCanvas.width, glow.x));
+                }
+                if (glow.y < 0 || glow.y > fireCanvas.height) {
+                    glow.velocityY *= -0.8;
+                    glow.y = Math.max(0, Math.min(fireCanvas.height, glow.y));
+                }
+            });
+        }
+        
+        // 动画循环
+        function animate() {
+            drawFire();
+            requestAnimationFrame(animate);
+        }
+        
+        // 初始绘制
+        resizeCanvas();
+        animate();
+    </script>
+</body>
+</html>
