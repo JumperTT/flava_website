@@ -9,6 +9,7 @@ body {
     overflow-x: hidden;
 }
 
+/* 全屏容器 */
 .fullscreen-container {
     width: 100vw;
     height: 100vh;
@@ -17,7 +18,7 @@ body {
     overflow: hidden;
 }
 
-/* 顶部栏 */
+/* 顶部标题栏 */
 .top-navbar {
     position: fixed;
     top: 0;
@@ -32,6 +33,7 @@ body {
     gap: 12px;
 }
 
+/* 三条杠图标 */
 .menu-icon {
     width: 16px;
     height: 12px;
@@ -39,6 +41,7 @@ body {
     flex-direction: column;
     justify-content: space-between;
     cursor: pointer;
+    flex-shrink: 0;
 }
 
 .menu-icon span {
@@ -48,10 +51,12 @@ body {
     border-radius: 0;
 }
 
+/* 右侧文字 */
 .nav-text {
     color: #fff;
     font-size: 0.9rem;
     font-weight: 500;
+    letter-spacing: 1px;
 }
 
 /* 侧边栏 */
@@ -76,6 +81,7 @@ body {
     left: 0;
 }
 
+/* 侧边栏上部 - 返回按钮 */
 .sidebar-top {
     padding-bottom: 15px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
@@ -97,8 +103,10 @@ body {
 
 .back-button:hover {
     background: rgba(255, 255, 255, 0.1);
+    border-color: #fff;
 }
 
+/* 侧边栏下部 - 树形文档列表 */
 .sidebar-bottom {
     flex: 1;
     overflow-y: auto;
@@ -112,6 +120,7 @@ body {
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* 树形结构样式 */
 .tree-list {
     list-style: none;
     padding-left: 0;
@@ -130,102 +139,114 @@ body {
     color: #ff4500;
 }
 
-/* 树形箭头 */
+/* 有子节点的项 */
 .tree-item.has-children {
     position: relative;
+}
+
+/* 树形箭头 */
+.tree-item.has-children > .tree-label {
+    padding-left: 18px;
+    cursor: pointer;
+    display: block;
 }
 
 .tree-item.has-children::before {
     content: "";
     position: absolute;
     left: 0;
-    top: 50%;
-    transform: translateY(-50%) rotate(0deg);
+    top: 10px;
     width: 6px;
     height: 6px;
-    border-right: 1.5px solid rgba(255,255,255,0.7);
-    border-bottom: 1.5px solid rgba(255,255,255,0.7);
-    transform-origin: center;
+    border-right: 1.5px solid rgba(255, 255, 255, 0.7);
+    border-bottom: 1.5px solid rgba(255, 255, 255, 0.7);
+    transform: rotate(-45deg);
     transition: transform 0.2s ease;
 }
 
+/* 展开状态 */
 .tree-item.has-children.open::before {
-    transform: translateY(-50%) rotate(45deg);
+    transform: rotate(45deg);
 }
 
+/* 子列表 */
 .tree-children {
     padding-left: 20px;
-    margin-top: 5px;
+    display: none;
 }
 
-/* 网格与光晕 */
-.grid-canvas, .glow-canvas {
+.tree-item.has-children.open > .tree-children {
+    display: block;
+}
+
+/* 网格画布 */
+.grid-canvas {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+    z-index: 1;
     pointer-events: none;
 }
 
-.grid-canvas { z-index: 1; }
-.glow-canvas { z-index: 2; }
+/* 光晕画布 */
+.glow-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+}
 
-/* 中间文档区域 - 放大到50px，透明度10% */
+/* 中间白色矩形 */
 .center-rectangle {
     position: absolute;
-    top: 50px;
-    left: 50px;
-    right: 50px;
-    bottom: 50px;
-    background: rgba(255, 255, 255, 0.1); /* 10%透明度 */
+    top: 30px;
+    left: 30px;
+    right: 30px;
+    bottom: 30px;
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 5px;
     z-index: 3;
-    padding: 0;
-    overflow: hidden;
-    display: flex;
-}
-
-/* 左侧文档列表 */
-.left-doc-list {
-    width: 280px;
-    padding: 30px 20px;
-    border-right: 1px solid rgba(255,255,255,0.1);
+    padding: 30px; /* 距离左上角30px */
     overflow-y: auto;
-    flex-shrink: 0;
-}
-
-/* 右侧文档内容 */
-.doc-content {
-    flex: 1;
-    padding: 40px;
-    overflow-y: auto;
-    color: #f0f0f0;
+    color: #fff; /* 文字白色 */
     line-height: 1.6;
+    pointer-events: auto;
 }
 
 /* Markdown 渲染样式 */
-.doc-content h1, .doc-content h2, .doc-content h3 {
+.center-rectangle h1,
+.center-rectangle h2,
+.center-rectangle h3 {
     color: #fff;
     margin: 1em 0 0.5em;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     padding-bottom: 0.3em;
 }
 
-.doc-content p { margin-bottom: 1em; }
-.doc-content code {
-    background: rgba(0,0,0,0.4);
+.center-rectangle p {
+    margin-bottom: 1em;
+}
+
+.center-rectangle code {
+    background: rgba(0, 0, 0, 0.4);
     padding: 2px 6px;
     border-radius: 4px;
     font-family: monospace;
 }
-.doc-content pre {
-    background: rgba(0,0,0,0.4);
+
+.center-rectangle pre {
+    background: rgba(0, 0, 0, 0.4);
     padding: 15px;
     border-radius: 5px;
     overflow-x: auto;
 }
-.doc-content blockquote {
+
+.center-rectangle blockquote {
     border-left: 4px solid #ff4500;
     padding-left: 15px;
     color: #aaa;
