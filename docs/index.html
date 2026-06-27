@@ -29,6 +29,7 @@
             <div class="sidebar-bottom">
                 <div class="tree-title">文档列表</div>
                 <ul class="tree-list">
+                    <!-- 新增 data-file 属性，指向 docs 文件夹里的文件 -->
                     <li class="tree-item active" data-file="index.md">首页</li>
                     <li class="tree-item" data-file="project/intro.md">项目文档</li>
                     <li class="tree-item" data-file="project/design.md">设计文档</li>
@@ -44,15 +45,15 @@
         <!-- 光晕画布 -->
         <canvas id="glowCanvas" class="glow-canvas"></canvas>
         
-        <!-- 中间白色矩形 (文档显示区) -->
+        <!-- 中间白色矩形 (新增了 id，用来显示文档) -->
         <div class="center-rectangle" id="contentArea">
-            <p>正在加载文档...</p>
+            <!-- 文档内容会动态加载到这里 -->
         </div>
     </div>
 
-    <!-- Markdown 解析库 -->
+    <!-- 新增：Markdown 解析库 -->
     <script src="lib/marked.min.js"></script>
-    <!-- 主逻辑 -->
+    <!-- 新增：主逻辑 -->
     <script src="main.js"></script>
 </body>
 </html>
