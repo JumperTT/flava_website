@@ -186,3 +186,29 @@ body {
     color: #aaa;
     margin: 1em 0;
 }
+/* ===== 树形箭头（极简直角） ===== */
+
+/* 有子节点的项 */
+.tree-item.has-children {
+    position: relative;
+}
+
+/* 箭头 */
+.tree-item.has-children::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) rotate(0deg);
+    width: 6px;
+    height: 6px;
+    border-right: 1.5px solid rgba(255,255,255,0.7);
+    border-bottom: 1.5px solid rgba(255,255,255,0.7);
+    transform-origin: center;
+    transition: transform 0.2s ease;
+}
+
+/* 展开状态 */
+.tree-item.has-children.open::before {
+    transform: translateY(-50%) rotate(45deg);
+}
