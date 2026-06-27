@@ -29,7 +29,10 @@
             <div class="sidebar-bottom">
                 <div class="tree-title">文档列表</div>
                 <ul class="tree-list">
-                    <li class="tree-item active" data-file="index.md">首页</li>
+                    <!-- 首页 -->
+                    <li class="tree-item" data-file="index.md">首页</li>
+
+                    <!-- 有子项：默认展开 -->
                     <li class="tree-item has-children open">
                         项目文档
                         <ul class="tree-children">
@@ -38,6 +41,8 @@
                             <li class="tree-item" data-file="project/test.md">测试用例</li>
                         </ul>
                     </li>
+
+                    <!-- 有子项：默认收起 -->
                     <li class="tree-item has-children">
                         技术文档
                         <ul class="tree-children">
@@ -45,6 +50,8 @@
                             <li class="tree-item" data-file="tech/deploy.md">部署指南</li>
                         </ul>
                     </li>
+
+                    <!-- 普通项 -->
                     <li class="tree-item" data-file="meeting.md">会议记录</li>
                     <li class="tree-item" data-file="guide.md">用户手册</li>
                 </ul>
@@ -57,36 +64,9 @@
         <!-- 光晕画布 -->
         <canvas id="glowCanvas" class="glow-canvas"></canvas>
         
-        <!-- 中间白色矩形（放大到50px，透明度10%） -->
+        <!-- 中间白色矩形 -->
         <div class="center-rectangle" id="contentArea">
-            <!-- 左侧文档列表 -->
-            <div class="left-doc-list">
-                <ul class="tree-list">
-                    <li class="tree-item active" data-file="index.md">首页</li>
-                    <li class="tree-item has-children open">
-                        项目文档
-                        <ul class="tree-children">
-                            <li class="tree-item" data-file="project/intro.md">项目介绍</li>
-                            <li class="tree-item" data-file="project/design.md">设计文档</li>
-                            <li class="tree-item" data-file="project/test.md">测试用例</li>
-                        </ul>
-                    </li>
-                    <li class="tree-item has-children">
-                        技术文档
-                        <ul class="tree-children">
-                            <li class="tree-item" data-file="tech/api.md">API 文档</li>
-                            <li class="tree-item" data-file="tech/deploy.md">部署指南</li>
-                        </ul>
-                    </li>
-                    <li class="tree-item" data-file="meeting.md">会议记录</li>
-                    <li class="tree-item" data-file="guide.md">用户手册</li>
-                </ul>
-            </div>
-            
-            <!-- 右侧文档内容 -->
-            <div class="doc-content">
-                <!-- 文档内容将在这里显示 -->
-            </div>
+            <p>正在加载文档...</p>
         </div>
     </div>
 
