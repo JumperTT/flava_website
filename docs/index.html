@@ -1,78 +1,72 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flava文档</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>文档管理系统</title>
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div class="fullscreen-container">
-        <!-- 顶部标题栏 -->
-        <div class="top-navbar">
-            <div class="menu-icon" id="menuIcon">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-            <div class="nav-text">Eeeee</div>
+<div class="fullscreen-container">
+
+    <!-- 顶部栏 -->
+    <div class="top-navbar">
+        <div class="menu-icon" id="menuIcon">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="nav-text">Eeeee</div>
+    </div>
+
+    <!-- 侧边栏 -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-top">
+            <a href="#" class="back-button" id="homeBtn">返回根目录</a>
         </div>
 
-        <!-- 侧边栏 -->
-        <div class="sidebar" id="sidebar">
-            <!-- 上部：返回按钮 -->
-            <div class="sidebar-top">
-                <a href="#" class="back-button" id="homeBtn">返回根目录</a>
-            </div>
-            
-            <!-- 下部：树形文档列表 -->
-            <div class="sidebar-bottom">
-                <div class="tree-title">文档列表</div>
-                <ul class="tree-list">
-                    <!-- 首页 -->
-                    <li class="tree-item" data-file="index.md">首页</li>
+        <div class="sidebar-bottom">
+            <div class="tree-title">文档列表</div>
 
-                    <!-- 有子项：默认展开 -->
-                    <li class="tree-item has-children open">
-                        项目文档
-                        <ul class="tree-children">
-                            <li class="tree-item" data-file="project/intro.md">项目介绍</li>
-                            <li class="tree-item" data-file="project/design.md">设计文档</li>
-                            <li class="tree-item" data-file="project/test.md">测试用例</li>
-                        </ul>
-                    </li>
+            <ul class="tree-list">
+                <li class="tree-item" data-file="index.md">首页</li>
 
-                    <!-- 有子项：默认收起 -->
-                    <li class="tree-item has-children">
-                        技术文档
-                        <ul class="tree-children">
-                            <li class="tree-item" data-file="tech/api.md">API 文档</li>
-                            <li class="tree-item" data-file="tech/deploy.md">部署指南</li>
-                        </ul>
-                    </li>
+                <!-- 父项（有箭头） -->
+                <li class="tree-item has-children open">
+                    <span class="tree-label">项目文档</span>
+                    <ul class="tree-children">
+                        <li class="tree-item" data-file="project/intro.md">项目介绍</li>
+                        <li class="tree-item" data-file="project/design.md">设计文档</li>
+                        <li class="tree-item" data-file="project/test.md">测试用例</li>
+                    </ul>
+                </li>
 
-                    <!-- 普通项 -->
-                    <li class="tree-item" data-file="meeting.md">会议记录</li>
-                    <li class="tree-item" data-file="guide.md">用户手册</li>
-                </ul>
-            </div>
-        </div>
+                <li class="tree-item has-children">
+                    <span class="tree-label">技术文档</span>
+                    <ul class="tree-children">
+                        <li class="tree-item" data-file="tech/api.md">API 文档</li>
+                        <li class="tree-item" data-file="tech/deploy.md">部署指南</li>
+                    </ul>
+                </li>
 
-        <!-- 网格画布 -->
-        <canvas id="gridCanvas" class="grid-canvas"></canvas>
-        
-        <!-- 光晕画布 -->
-        <canvas id="glowCanvas" class="glow-canvas"></canvas>
-        
-        <!-- 中间白色矩形 -->
-        <div class="center-rectangle" id="contentArea">
-            <p>正在加载文档...</p>
+                <li class="tree-item" data-file="meeting.md">会议记录</li>
+                <li class="tree-item" data-file="guide.md">用户手册</li>
+            </ul>
         </div>
     </div>
 
-    <!-- Markdown 解析库 -->
-    <script src="lib/marked.min.js"></script>
-    <!-- 主逻辑 -->
-    <script src="main.js"></script>
+    <!-- 网格 / 光晕 -->
+    <canvas id="gridCanvas" class="grid-canvas"></canvas>
+    <canvas id="glowCanvas" class="glow-canvas"></canvas>
+
+    <!-- 文档区 -->
+    <div class="center-rectangle" id="contentArea">
+        <p>正在加载文档...</p>
+    </div>
+
+</div>
+
+<script src="lib/marked.min.js"></script>
+<script src="main.js"></script>
 </body>
 </html>
