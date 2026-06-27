@@ -29,12 +29,24 @@
             <div class="sidebar-bottom">
                 <div class="tree-title">文档列表</div>
                 <ul class="tree-list">
-                    <!-- 新增 data-file 属性，指向 docs 文件夹里的文件 -->
                     <li class="tree-item active" data-file="index.md">首页</li>
-                    <li class="tree-item" data-file="project/intro.md">项目文档</li>
-                    <li class="tree-item" data-file="project/design.md">设计文档</li>
-                    <li class="tree-item" data-file="tech/api.md">API 接口</li>
-                    <li class="tree-item" data-file="tech/deploy.md">部署指南</li>
+                    <li class="tree-item has-children open">
+                        项目文档
+                        <ul class="tree-children">
+                            <li class="tree-item" data-file="project/intro.md">项目介绍</li>
+                            <li class="tree-item" data-file="project/design.md">设计文档</li>
+                            <li class="tree-item" data-file="project/test.md">测试用例</li>
+                        </ul>
+                    </li>
+                    <li class="tree-item has-children">
+                        技术文档
+                        <ul class="tree-children">
+                            <li class="tree-item" data-file="tech/api.md">API 文档</li>
+                            <li class="tree-item" data-file="tech/deploy.md">部署指南</li>
+                        </ul>
+                    </li>
+                    <li class="tree-item" data-file="meeting.md">会议记录</li>
+                    <li class="tree-item" data-file="guide.md">用户手册</li>
                 </ul>
             </div>
         </div>
@@ -45,15 +57,42 @@
         <!-- 光晕画布 -->
         <canvas id="glowCanvas" class="glow-canvas"></canvas>
         
-        <!-- 中间白色矩形 (新增了 id，用来显示文档) -->
+        <!-- 中间白色矩形（放大到50px，透明度10%） -->
         <div class="center-rectangle" id="contentArea">
-            <!-- 文档内容会动态加载到这里 -->
+            <!-- 左侧文档列表 -->
+            <div class="left-doc-list">
+                <ul class="tree-list">
+                    <li class="tree-item active" data-file="index.md">首页</li>
+                    <li class="tree-item has-children open">
+                        项目文档
+                        <ul class="tree-children">
+                            <li class="tree-item" data-file="project/intro.md">项目介绍</li>
+                            <li class="tree-item" data-file="project/design.md">设计文档</li>
+                            <li class="tree-item" data-file="project/test.md">测试用例</li>
+                        </ul>
+                    </li>
+                    <li class="tree-item has-children">
+                        技术文档
+                        <ul class="tree-children">
+                            <li class="tree-item" data-file="tech/api.md">API 文档</li>
+                            <li class="tree-item" data-file="tech/deploy.md">部署指南</li>
+                        </ul>
+                    </li>
+                    <li class="tree-item" data-file="meeting.md">会议记录</li>
+                    <li class="tree-item" data-file="guide.md">用户手册</li>
+                </ul>
+            </div>
+            
+            <!-- 右侧文档内容 -->
+            <div class="doc-content">
+                <!-- 文档内容将在这里显示 -->
+            </div>
         </div>
     </div>
 
-    <!-- 新增：Markdown 解析库 -->
+    <!-- Markdown 解析库 -->
     <script src="lib/marked.min.js"></script>
-    <!-- 新增：主逻辑 -->
+    <!-- 主逻辑 -->
     <script src="main.js"></script>
 </body>
 </html>
