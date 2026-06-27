@@ -179,7 +179,7 @@ body {
     display: block;
 }
 
-/* 网格画布 */
+/* ===== 关键：背景画布（必须保留！）===== */
 .grid-canvas {
     position: absolute;
     top: 0;
@@ -190,7 +190,6 @@ body {
     pointer-events: none;
 }
 
-/* 光晕画布 */
 .glow-canvas {
     position: absolute;
     top: 0;
@@ -211,9 +210,9 @@ body {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 5px;
     z-index: 3;
-    padding: 30px; /* 距离左上角30px */
+    padding: 30px;
     overflow-y: auto;
-    color: #fff; /* 文字白色 */
+    color: #fff;
     line-height: 1.6;
     pointer-events: auto;
 }
