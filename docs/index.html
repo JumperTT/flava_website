@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文档管理系统</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="fullscreen-container">
+        <!-- 顶部标题栏 -->
+        <div class="top-navbar">
+            <div class="menu-icon" id="menuIcon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="nav-text">Eeeee</div>
+        </div>
+
+        <!-- 侧边栏 -->
+        <div class="sidebar" id="sidebar">
+            <!-- 上部：返回按钮 -->
+            <div class="sidebar-top">
+                <a href="#" class="back-button" id="homeBtn">返回根目录</a>
+            </div>
+            
+            <!-- 下部：树形文档列表 -->
+            <div class="sidebar-bottom">
+                <div class="tree-title">文档列表</div>
+                <ul class="tree-list">
+                    <li class="tree-item active" data-file="index.md">首页</li>
+                    <li class="tree-item" data-file="project/intro.md">项目文档</li>
+                    <li class="tree-item" data-file="project/design.md">设计文档</li>
+                    <li class="tree-item" data-file="tech/api.md">API 接口</li>
+                    <li class="tree-item" data-file="tech/deploy.md">部署指南</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 网格画布 -->
+        <canvas id="gridCanvas" class="grid-canvas"></canvas>
+        
+        <!-- 光晕画布 -->
+        <canvas id="glowCanvas" class="glow-canvas"></canvas>
+        
+        <!-- 中间白色矩形 (文档显示区) -->
+        <div class="center-rectangle" id="contentArea">
+            <p>正在加载文档...</p>
+        </div>
+    </div>
+
+    <!-- Markdown 解析库 -->
+    <script src="lib/marked.min.js"></script>
+    <!-- 主逻辑 -->
+    <script src="main.js"></script>
+</body>
+</html>
