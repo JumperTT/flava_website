@@ -2,5 +2,5 @@
     "version":"1.0",
     "description":"测试。",
     "choices":["测试文本1","测试文本2"],
-    "urls":["downloads/a.txt","downloads/b.txt"]
+    "urls":["download/a.txt","download/b.txt"]
 }
