@@ -1,6 +1,6 @@
 {
     "version":"1.0",
     "description":"测试。",
-    "choices":["测试文本1","测试文本2"],
-    "urls":["download/a.txt","download/b.txt"]
+    "choices":["测试文本1","测试程序1"],
+    "urls":["download/a.txt","download/test.exe"]
 }
