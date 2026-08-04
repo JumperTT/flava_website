@@ -1,13 +1,13 @@
 /* ============================================================
-   Flava Docs — 完整样式表（最终版）
+   Flava Docs — 完整样式表（最终版 v10）
    · 背景画布（fixed 全屏）
    · 顶部导航栏
    · 侧边栏（树形菜单）
    · 半透明白色圆角矩形背景（20% 透明度，离边缘 20px）
-     → 与 .content-wrapper 同级，fixed 钉视口，永不断层
    · 文档文字白色系 + 标题 rgb(190,200,255)
    · 表格全透明、无交替色
    · 搜索框深色主题
+   · 文字与背景左侧留 56px 间距
    ============================================================ */
 
 /* ---------- Reset ---------- */
@@ -24,7 +24,7 @@ body {
     font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
     background: #000;
     color: #ffffff;
-    overflow: hidden;          /* 防止 body 自己滚动；滚动交给 .content-wrapper */
+    overflow: hidden;
     line-height: 1.6;
 }
 
@@ -144,7 +144,6 @@ a:hover { color: #ffffff; }
     font-weight: 600;
 }
 
-/* 父级箭头 */
 .tree-item.has-children > .tree-label::before {
     content: '▸ ';
     display: inline-block;
@@ -185,29 +184,32 @@ a:hover { color: #ffffff; }
 /* ============================================================
    核心：半透明白色圆角矩形背景
    - 与 .content-wrapper 同级，直接挂 body 下
-   - position: fixed → 永远钉在视口，不随内容滚动
+   - position: fixed → 永远钉在视口
    - top/left/right/bottom 全部固定 → 永远铺满可视区
    - z-index 5，在画布(0/1)之上、文字容器(10)之下
    ============================================================ */
 .content-bg {
     position: fixed;
     z-index: 5;
-    top: 62px;          /* 42px 导航栏 + 20px 间距 */
-    left: 20px;
-    right: 20px;
-    bottom: 20px;
-    background: rgba(255, 255, 255, 0.20);   /* 20% 白色 */
+    /* 比文字容器（62/20/20/20）各边外扩 5px，让文字左侧留出 5px 白边 */
+    top: 57px;
+    left: 15px;
+    right: 15px;
+    bottom: 15px;
+    background: rgba(255, 255, 255, 0.20);
     border-radius: 20px;
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     border: 1px solid rgba(255, 255, 255, 0.18);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    pointer-events: none;  /* 不挡鼠标事件 */
+    pointer-events: none;
 }
 
 /* 侧边栏打开时，背景和文字容器一起右移 */
 @media (min-width: 769px) {
-    body.sidebar-open .content-bg,
+    body.sidebar-open .content-bg {
+        left: calc(15px + 240px);
+    }
     body.sidebar-open .content-wrapper {
         left: calc(20px + 240px);
     }
@@ -215,9 +217,6 @@ a:hover { color: #ffffff; }
 
 /* ============================================================
    文档内容滚动容器
-   - 与 .content-bg 同级、同样 fixed 钉视口
-   - z-index 10 在背景之上，文字永远有白底衬着
-   - 内部 overflow-y: auto 自己管理滚动
    ============================================================ */
 .content-wrapper {
     position: fixed;
@@ -232,11 +231,11 @@ a:hover { color: #ffffff; }
 }
 
 /* ---------- docsify 内容区 ---------- */
-#app {
+/* 用极高优先级确保 padding 不被任何外部样式覆盖 */
+body .content-wrapper #app {
     position: relative;
     z-index: 1;
-    /* 左右各 56px，让文字和白色矩形左/右边缘之间有明显间距 */
-    padding: 36px 56px 36px 56px;
+    padding: 36px 48px 36px 56px;   /* ← 左侧 56px，给文字和背景边缘留足呼吸空间 */
 }
 
 /* ---------- Markdown 内容（白色系） ---------- */
@@ -342,9 +341,8 @@ a:hover { color: #ffffff; }
     padding: 10px 14px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     color: #ffffff;
-    background: transparent;   /* 强制透明，杜绝交替灰 */
+    background: transparent;
 }
-/* 关键：覆盖任何可能的斑马纹 */
 .markdown-section tr:nth-child(even) td,
 .markdown-section tr:nth-child(odd) td {
     background: transparent;
@@ -430,7 +428,7 @@ a:hover { color: #ffffff; }
         bottom: 12px;
         border-radius: 14px;
     }
-    #app { padding: 24px 20px; }
+    body .content-wrapper #app { padding: 24px 18px 24px 24px; }
     .markdown-section h1 { font-size: 1.6rem; }
     .markdown-section h2 { font-size: 1.25rem; }
 }
