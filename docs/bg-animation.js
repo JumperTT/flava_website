@@ -2,10 +2,9 @@
    bg-animation.js
    ─────────────────────────────────────────────────
    1. 背景动画：白色旋转网格 + 火焰光晕 + 漂浮粒子
-      （从主站 index.html 移植）
    2. 侧边栏交互：树形折叠 / 展开 / 路由跳转
    3. 与 docsify 联动：点击侧边栏 → 修改 hash → docsify 加载对应 .md
-   4. 内容区半透明白色背景高度自适应（关键修复）
+   4. 内容区白色半透明背景（fixed 定位，始终覆盖可视区）
    ============================================================ */
 
 (function () {
@@ -23,7 +22,6 @@
     const homeBtn = document.getElementById('homeBtn');
     const contentWrapper = document.getElementById('contentWrapper');
     const contentBg = document.getElementById('contentBg');
-    const app = document.getElementById('app');
 
     /* ============================================================
        背景动画 — 数据
@@ -153,13 +151,11 @@
         const diag = Math.sqrt(gridCanvas.width ** 2 + gridCanvas.height ** 2);
         const s = -diag, e = diag;
 
-        // 20px 暗网
         gridCtx.strokeStyle = 'rgba(255,255,255,0.06)';
         gridCtx.lineWidth = 1;
         for (let x = s; x <= e; x += 20) { gridCtx.beginPath(); gridCtx.moveTo(x, s); gridCtx.lineTo(x, e); gridCtx.stroke(); }
         for (let y = s; y <= e; y += 20) { gridCtx.beginPath(); gridCtx.moveTo(s, y); gridCtx.lineTo(e, y); gridCtx.stroke(); }
 
-        // 10px 亮网
         gridCtx.strokeStyle = 'rgba(255,255,255,0.15)';
         gridCtx.lineWidth = 1.2;
         for (let x = s; x <= e; x += 10) { gridCtx.beginPath(); gridCtx.moveTo(x, s); gridCtx.lineTo(x, e); gridCtx.stroke(); }
@@ -216,8 +212,8 @@
             if (p.offsetY < p.baseOffsetY - 15) p.velocityOffsetY += 0.1;
             if (p.offsetX > p.baseOffsetX + 10) p.velocityOffsetX -= 0.05;
             if (p.offsetX < p.baseOffsetX - 10) p.velocityOffsetX += 0.05;
-            p.velocityOffsetY = Math.max(p.maxVelocityOffset, Math.min(p.maxVelocityOffset, p.velocityOffsetY));
-            p.velocityOffsetX = Math.max(p.maxVelocityOffset, Math.min(p.maxVelocityOffset, p.velocityOffsetX));
+            p.velocityOffsetY = Math.max(p.minVelocityOffset, Math.min(p.maxVelocityOffset, p.velocityOffsetY));
+            p.velocityOffsetX = Math.max(p.minVelocityOffset, Math.min(p.minVelocityOffset, p.velocityOffsetX));
             p.velocityOffsetY *= 0.98;
             p.velocityOffsetX *= 0.98;
         });
@@ -291,7 +287,6 @@
     function drawFire() {
         fireCtx.clearRect(0, 0, fireCanvas.width, fireCanvas.height);
 
-        // 光晕
         backgroundGlows.forEach(g => {
             const grad = fireCtx.createRadialGradient(g.x, g.y, 0, g.x, g.y, g.radius);
             grad.addColorStop(0, g.color);
@@ -307,7 +302,6 @@
         updateFlamePositions();
         updateGlowPositions();
 
-        // 红色火焰
         fireCtx.beginPath();
         fireCtx.moveTo(redPoints[0].x, redPoints[0].y);
         for (let i = 1; i < redPoints.length; i++) fireCtx.lineTo(redPoints[i].x, redPoints[i].y);
@@ -321,7 +315,6 @@
         fireCtx.fillStyle = rg;
         fireCtx.fill();
 
-        // 橙色火焰
         fireCtx.beginPath();
         fireCtx.moveTo(orangePoints[0].x, orangePoints[0].y);
         for (let i = 1; i < orangePoints.length; i++) fireCtx.lineTo(orangePoints[i].x, orangePoints[i].y);
@@ -335,7 +328,6 @@
         fireCtx.fillStyle = og;
         fireCtx.fill();
 
-        // 黄色火焰
         fireCtx.beginPath();
         fireCtx.moveTo(yellowPoints[0].x, yellowPoints[0].y);
         for (let i = 1; i < yellowPoints.length; i++) fireCtx.lineTo(yellowPoints[i].x, yellowPoints[i].y);
@@ -371,32 +363,20 @@
         drawGrid();
     }
 
-    // 暴露给 docsify 插件
     window.__resizeCanvas = resizeCanvas;
 
     /* ============================================================
-       内容区背景 — 核心修复
-       ============================================================
-       问题：.content-bg 是 absolute 定位，高度只等于 wrapper 可视高度。
-       当文档内容超出可视区需要滚动时，滚下去的部分没有背景。
-
-       解决：用 ResizeObserver 监听 #app 的内容高度变化，
-       动态把 .content-bg 的高度设为 max(内容高度, 可视高度)，
-       确保背景始终覆盖所有内容 + 可视区域。
-    */
+       核心：白色背景定位
+       ------------------------------------------------
+       关键改动：.content-bg 在 CSS 中是 position:fixed，
+       直接相对于视口定位，永远覆盖可视区域。
+       这里只需要处理侧边栏打开/关闭时的 left 偏移，
+       以及路由切换后的滚动复位。
+       ============================================================ */
     function adjustContentBg() {
-        if (!contentWrapper || !contentBg || !app) return;
+        if (!contentWrapper) return;
 
-        // 计算所需高度：内容高度和可视高度取最大值
-        const contentHeight = app.scrollHeight;
-        const viewportHeight = contentWrapper.clientHeight;
-        const neededHeight = Math.max(contentHeight, viewportHeight);
-
-        // 设置背景高度
-        contentBg.style.height = neededHeight + 'px';
-
-        // 路由切换后复位滚动位置到顶部
-        // 用双重 rAF 确保在 docsify 渲染完成后再执行
+        // 路由切换后回到顶部 —— 用双重 rAF 确保 docsify 渲染完成
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
                 contentWrapper.scrollTop = 0;
@@ -404,7 +384,6 @@
         });
     }
 
-    // 暴露给 docsify 插件
     window.__adjustContentBg = adjustContentBg;
 
     /* ============================================================
@@ -425,9 +404,7 @@
         document.querySelectorAll('.tree-item[data-route]').forEach(item => {
             item.addEventListener('click', () => {
                 const route = item.dataset.route;
-                // 修改 hash，docsify 会拦截并加载对应的 .md 文件
                 location.hash = '#/' + route;
-                // 收起侧边栏（移动端体验）
                 if (window.innerWidth < 768) {
                     sidebar.classList.remove('active');
                     document.body.classList.remove('sidebar-open');
@@ -448,14 +425,12 @@
                 item.classList.add('active');
             } else if (hash && route === hash) {
                 item.classList.add('active');
-                // 自动展开父级
                 const parent = item.closest('.tree-children');
                 if (parent) parent.parentElement.classList.add('open');
             }
         });
     }
 
-    // 暴露给 docsify 插件
     window.__syncSidebar = syncSidebar;
 
     /* ============================================================
@@ -488,33 +463,14 @@
         initTreeToggle();
         initTreeNavigation();
 
-        // 初始高亮
         setTimeout(syncSidebar, 100);
+        setTimeout(adjustContentBg, 200);
 
-        // 初始背景高度调整（延迟确保 DOM 渲染完成）
-        setTimeout(adjustContentBg, 300);
-
-        // 窗口缩放 → 重绘背景 + 重新计算背景高度
-        window.addEventListener('resize', () => {
-            resizeCanvas();
-            adjustContentBg();
-        });
-
-        // hash 变化 → 同步高亮 + 重新计算背景
+        window.addEventListener('resize', () => resizeCanvas());
         window.addEventListener('hashchange', () => {
             syncSidebar();
-            // 延迟等待 docsify 渲染新内容
             setTimeout(adjustContentBg, 100);
         });
-
-        // 关键：用 ResizeObserver 监听内容区域高度变化
-        // 当 docsify 加载新文档后，#app 的高度会变化，自动触发背景高度更新
-        if (window.ResizeObserver) {
-            const ro = new ResizeObserver(() => {
-                adjustContentBg();
-            });
-            ro.observe(app);
-        }
     }
 
     if (document.readyState === 'loading') {
