@@ -1,13 +1,13 @@
 /* ============================================================
-   Flava Docs — 完整样式表（最终版 v11）
+   Flava Docs — 样式表（v12）
    · 背景画布（fixed 全屏）
    · 顶部导航栏
    · 侧边栏（树形菜单）
-   · 半透明白色圆角矩形背景（20% 透明度，离边缘 20px）
+   · 半透明白色圆角矩形背景（20% 透明度）
    · 文档文字白色系 + 标题 rgb(190,200,255)
    · 表格全透明、无交替色
    · 搜索框深色主题
-   · 文字与背景左侧留 5px 间距（通过 wrapper left 20px - bg left 15px 实现）
+   · 文字与白色矩形边缘保持 5px 间距
    ============================================================ */
 
 /* ---------- Reset ---------- */
@@ -183,14 +183,17 @@ a:hover { color: #ffffff; }
 
 /* ============================================================
    核心：半透明白色圆角矩形背景
+   - position: fixed → 钉在视口，永远铺满可视区
+   - 离网页边缘 20px（top 62 = 42导航 + 20间距）
+   - z-index 5，在画布之上、文字容器之下
    ============================================================ */
 .content-bg {
     position: fixed;
     z-index: 5;
-    top: 57px;
-    left: 15px;
-    right: 15px;
-    bottom: 15px;
+    top: 62px;          /* 42px 导航栏 + 20px 间距 */
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
     background: rgba(255, 255, 255, 0.20);
     border-radius: 20px;
     backdrop-filter: blur(6px);
@@ -200,35 +203,46 @@ a:hover { color: #ffffff; }
     pointer-events: none;
 }
 
-@media (min-width: 769px) {
-    body.sidebar-open .content-bg {
-        left: calc(15px + 240px);
-    }
-    body.sidebar-open .content-wrapper {
-        left: calc(20px + 240px);
-    }
-}
-
 /* ============================================================
    文档内容滚动容器
+   - 与 .content-bg 同级，同样 fixed 钉视口
+   - 关键：各边比 .content-bg 内缩 5px
+     → top: 67px (bg 62 + 5)
+     → left/right: 25px (bg 20 + 5)
+     → bottom: 25px (bg 20 + 5)
+   - 这 5px 就是文字离白色矩形边缘的间距
+   - z-index 10 在背景之上
    ============================================================ */
 .content-wrapper {
     position: fixed;
     z-index: 10;
-    top: 62px;
-    left: 20px;
-    right: 20px;
-    bottom: 20px;
+    top: 67px;           /* bg top 62 + 5px 间距 */
+    left: 25px;          /* bg left 20 + 5px 间距 */
+    right: 25px;         /* bg right 20 + 5px 间距 */
+    bottom: 25px;        /* bg bottom 20 + 5px 间距 */
     overflow-y: auto;
     overflow-x: hidden;
     transition: left 0.3s ease;
 }
 
+/* 侧边栏打开时，背景和文字容器一起右移 */
+@media (min-width: 769px) {
+    body.sidebar-open .content-bg {
+        left: calc(20px + 240px);
+    }
+    body.sidebar-open .content-wrapper {
+        left: calc(25px + 240px);
+    }
+}
+
 /* ---------- docsify 内容区 ---------- */
+/* 用极高优先级确保 padding 不被外部样式覆盖 */
 body .content-wrapper #app {
     position: relative;
     z-index: 1;
-    padding: 36px 48px 36px 0;   /* ← 左侧 padding 改为 0，利用 wrapper left 20px - bg left 15px = 5px 作为间距 */
+    /* 左右各加 20px 内边距，让文字进一步远离白色矩形边缘
+       总间距 = 5px(容器缩进) + 20px(padding) = 25px */
+    padding: 30px 20px 30px 20px;
 }
 
 /* ---------- Markdown 内容（白色系） ---------- */
@@ -237,6 +251,7 @@ body .content-wrapper #app {
     line-height: 1.85;
 }
 
+/* 标题统一浅蓝紫 rgb(190,200,255) */
 .markdown-section h1,
 .markdown-section h2,
 .markdown-section h3,
@@ -263,6 +278,7 @@ body .content-wrapper #app {
 
 .markdown-section p { margin-bottom: 14px; color: #ffffff; }
 
+/* 链接 */
 .markdown-section a {
     color: rgb(190, 200, 255);
     border-bottom: 1px dashed rgba(190, 200, 255, 0.5);
@@ -273,6 +289,7 @@ body .content-wrapper #app {
     border-bottom-color: #ffffff;
 }
 
+/* 行内 code */
 .markdown-section code {
     background: rgba(255, 255, 255, 0.15);
     color: #ffffff;
@@ -283,6 +300,7 @@ body .content-wrapper #app {
     font-weight: 500;
 }
 
+/* 代码块 */
 .markdown-section pre {
     background: rgba(20, 20, 28, 0.92) !important;
     border: 1px solid rgba(190, 200, 255, 0.2);
@@ -301,6 +319,7 @@ body .content-wrapper #app {
     font-weight: 400;
 }
 
+/* 引用块 */
 .markdown-section blockquote {
     border-left: 4px solid rgb(190, 200, 255);
     background: rgba(190, 200, 255, 0.06);
@@ -310,6 +329,7 @@ body .content-wrapper #app {
     color: #f0f0f0;
 }
 
+/* 表格 —— 全透明，无交替色 */
 .markdown-section table {
     width: 100%;
     border-collapse: collapse;
@@ -328,14 +348,14 @@ body .content-wrapper #app {
     padding: 10px 14px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     color: #ffffff;
-    background: transparent;
+    background: transparent !important;   /* 强制透明，覆盖一切 */
 }
 .markdown-section tr:nth-child(even) td,
 .markdown-section tr:nth-child(odd) td {
-    background: transparent;
+    background: transparent !important;
 }
 .markdown-section tr:hover td {
-    background: rgba(190, 200, 255, 0.06);
+    background: rgba(190, 200, 255, 0.06) !important;
 }
 
 .markdown-section hr {
@@ -379,6 +399,7 @@ body .content-wrapper #app {
     box-shadow: 0 0 12px rgba(190, 200, 255, 0.3);
 }
 
+/* 搜索结果面板 */
 .search .results-panel {
     background: rgba(20, 20, 28, 0.95) !important;
     border: 1px solid rgba(190, 200, 255, 0.25) !important;
@@ -406,15 +427,21 @@ body .content-wrapper #app {
 
 /* ---------- 响应式 ---------- */
 @media (max-width: 768px) {
-    .content-bg,
-    .content-wrapper {
+    .content-bg {
         top: 56px;
         left: 12px;
         right: 12px;
         bottom: 12px;
         border-radius: 14px;
     }
-    body .content-wrapper #app { padding: 24px 18px 24px 0; }
+    .content-wrapper {
+        top: 61px;       /* bg 56 + 5 */
+        left: 17px;      /* bg 12 + 5 */
+        right: 17px;     /* bg 12 + 5 */
+        bottom: 17px;    /* bg 12 + 5 */
+        border-radius: 14px;
+    }
+    body .content-wrapper #app { padding: 20px 14px; }
     .markdown-section h1 { font-size: 1.6rem; }
     .markdown-section h2 { font-size: 1.25rem; }
 }

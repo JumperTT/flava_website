@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Flava 文档</title>
-    <!-- 自定义样式（不加载 docsify vue.css，避免冲突） -->
+    <!-- 只加载自定义样式，不加载 docsify 外部主题（避免样式冲突） -->
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -18,7 +18,7 @@
         <div class="nav-text">Flava Docs</div>
     </nav>
 
-    <!-- ========== 侧边栏（自定义，docsify 不接管） ========== -->
+    <!-- ========== 侧边栏 ========== -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <a href="https://flava.woen.pics" class="back-button" id="homeBtn">← 返回主页</a>
@@ -72,7 +72,8 @@
         ========== 半透明白色圆角矩形背景 ==========
         与 .content-wrapper 同级，都直接挂在 body 下，
         都用 position: fixed 钉在视口上。
-        height: calc(100vh - 82px) → 永远紧贴底部 20px。
+        .content-bg 比 .content-wrapper 各边外扩 5px，
+        这样文字离白色矩形边缘就有 5px 间距。
     -->
     <div class="content-bg" id="contentBg"></div>
 
