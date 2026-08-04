@@ -3,8 +3,8 @@
    ─────────────────────────────────────────────────
    1. 背景动画：白色旋转网格 + 火焰光晕 + 漂浮粒子
    2. 侧边栏交互：树形折叠 / 展开 / 路由跳转
-   3. 与 docsify 联动：点击侧边栏 → 修改 hash → docsify 加载对应 .md
-   4. 返回主页 → 随机小写英文字母子域名.flava.woen.pics
+   3. 与 docsify 联动
+   4. 返回主页 → 随机子域名跳转
    5. 搜索结果点击后清空搜索框
    ============================================================ */
 
@@ -22,7 +22,6 @@
     const menuIcon = document.getElementById('menuIcon');
     const homeBtn = document.getElementById('homeBtn');
     const contentWrapper = document.getElementById('contentWrapper');
-    const contentBg = document.getElementById('contentBg');
 
     /* ============================================================
        背景动画 — 数据
@@ -152,13 +151,11 @@
         const diag = Math.sqrt(gridCanvas.width ** 2 + gridCanvas.height ** 2);
         const s = -diag, e = diag;
 
-        // 20px 暗网
         gridCtx.strokeStyle = 'rgba(255,255,255,0.06)';
         gridCtx.lineWidth = 1;
         for (let x = s; x <= e; x += 20) { gridCtx.beginPath(); gridCtx.moveTo(x, s); gridCtx.lineTo(x, e); gridCtx.stroke(); }
         for (let y = s; y <= e; y += 20) { gridCtx.beginPath(); gridCtx.moveTo(s, y); gridCtx.lineTo(e, y); gridCtx.stroke(); }
 
-        // 10px 亮网
         gridCtx.strokeStyle = 'rgba(255,255,255,0.15)';
         gridCtx.lineWidth = 1.2;
         for (let x = s; x <= e; x += 10) { gridCtx.beginPath(); gridCtx.moveTo(x, s); gridCtx.lineTo(x, e); gridCtx.stroke(); }
@@ -290,7 +287,6 @@
     function drawFire() {
         fireCtx.clearRect(0, 0, fireCanvas.width, fireCanvas.height);
 
-        // 光晕
         backgroundGlows.forEach(g => {
             const grad = fireCtx.createRadialGradient(g.x, g.y, 0, g.x, g.y, g.radius);
             grad.addColorStop(0, g.color);
@@ -306,7 +302,6 @@
         updateFlamePositions();
         updateGlowPositions();
 
-        // 红色火焰
         fireCtx.beginPath();
         fireCtx.moveTo(redPoints[0].x, redPoints[0].y);
         for (let i = 1; i < redPoints.length; i++) fireCtx.lineTo(redPoints[i].x, redPoints[i].y);
@@ -320,7 +315,6 @@
         fireCtx.fillStyle = rg;
         fireCtx.fill();
 
-        // 橙色火焰
         fireCtx.beginPath();
         fireCtx.moveTo(orangePoints[0].x, orangePoints[0].y);
         for (let i = 1; i < orangePoints.length; i++) fireCtx.lineTo(orangePoints[i].x, orangePoints[i].y);
@@ -334,7 +328,6 @@
         fireCtx.fillStyle = og;
         fireCtx.fill();
 
-        // 黄色火焰
         fireCtx.beginPath();
         fireCtx.moveTo(yellowPoints[0].x, yellowPoints[0].y);
         for (let i = 1; i < yellowPoints.length; i++) fireCtx.lineTo(yellowPoints[i].x, yellowPoints[i].y);
@@ -370,13 +363,12 @@
         drawGrid();
     }
 
-    // 暴露给 docsify 插件
     window.__resizeCanvas = resizeCanvas;
 
     /* ============================================================
-       内容区背景 — 路由切换后复位滚动位置
-       .content-bg 是 fixed 钉在视口上的，永远铺满可视区，
-       不需要手动设置高度。只需把滚动容器滚回顶部。
+       路由切换后复位滚动位置
+       背景现在是 CSS 伪元素 (position:fixed)，
+       高度永远 = 视口高度，不需要 JS 去调高度。
        ============================================================ */
     function adjustContentBg() {
         if (!contentWrapper) return;
@@ -388,16 +380,32 @@
         });
     }
 
-    // 暴露给 docsify 插件
     window.__adjustContentBg = adjustContentBg;
 
     /* ============================================================
+       清空搜索框
+       ============================================================ */
+    function clearSearch() {
+        const searchInput = document.querySelector('.search input');
+        const resultsPanel = document.querySelector('.search .results-panel');
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+        }
+        if (resultsPanel) {
+            resultsPanel.style.display = 'none';
+        }
+    }
+
+    window.__clearSearch = clearSearch;
+
+    /* ============================================================
        随机子域名生成
-       例：abc.flava.woen.pics / kzp.flava.woen.pics
+       3~10 位随机小写英文字母
        ============================================================ */
     function getRandomSubdomain() {
         const chars = 'abcdefghijklmnopqrstuvwxyz';
-        const length = Math.floor(Math.random() * 8) + 3; // 3~10 位
+        const length = Math.floor(Math.random() * 8) + 3; // 3~10
         let result = '';
         for (let i = 0; i < length; i++) {
             result += chars[Math.floor(Math.random() * chars.length)];
@@ -450,7 +458,6 @@
         });
     }
 
-    // 暴露给 docsify 插件
     window.__syncSidebar = syncSidebar;
 
     /* ============================================================
@@ -466,7 +473,6 @@
         if (homeBtn) {
             homeBtn.addEventListener('click', e => {
                 e.preventDefault();
-                // 跳转到 随机小写英文字母.flava.woen.pics
                 const sub = getRandomSubdomain();
                 window.location.href = 'https://' + sub + '.flava.woen.pics';
             });
@@ -474,41 +480,19 @@
     }
 
     /* ============================================================
-       搜索框 — 点击搜索结果后清空搜索框并隐藏面板
+       搜索结果点击 → 清空搜索框
+       用事件委托监听动态生成的搜索结果
        ============================================================ */
-    function initSearchClear() {
-        // 等待 docsify 搜索插件渲染完
-        const tryAttach = () => {
-            const searchInput = document.querySelector('.search input');
-            const resultsPanel = document.querySelector('.search .results-panel');
-            if (!searchInput || !resultsPanel) {
-                setTimeout(tryAttach, 300);
-                return;
+    function initSearchResultHandler() {
+        document.addEventListener('click', e => {
+            const searchResult = e.target.closest('.search .results-panel a');
+            if (searchResult) {
+                // 延迟一点等路由切换完成
+                setTimeout(() => {
+                    clearSearch();
+                }, 150);
             }
-
-            // 事件委托：监听搜索结果点击
-            document.addEventListener('click', e => {
-                const resultLink = e.target.closest('.search .results-panel a');
-                if (resultLink) {
-                    // 延迟清空，等路由跳转完成
-                    setTimeout(() => {
-                        searchInput.value = '';
-                        // 触发 input 事件让搜索插件刷新
-                        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-                        // 隐藏结果面板
-                        resultsPanel.style.display = 'none';
-                    }, 150);
-                }
-            });
-
-            // 路由变化时也清空搜索框
-            window.addEventListener('hashchange', () => {
-                searchInput.value = '';
-                searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-                resultsPanel.style.display = 'none';
-            });
-        };
-        tryAttach();
+        });
     }
 
     /* ============================================================
@@ -520,18 +504,17 @@
         initSidebarControls();
         initTreeToggle();
         initTreeNavigation();
-        initSearchClear();
+        initSearchResultHandler();
 
-        // 初始高亮
         setTimeout(syncSidebar, 100);
-        // 初始复位
         setTimeout(adjustContentBg, 200);
 
-        // 窗口缩放
         window.addEventListener('resize', () => resizeCanvas());
-
-        // hash 变化 → 同步高亮
-        window.addEventListener('hashchange', syncSidebar);
+        window.addEventListener('hashchange', () => {
+            syncSidebar();
+            // 路由切换时也清空搜索框
+            setTimeout(clearSearch, 200);
+        });
     }
 
     if (document.readyState === 'loading') {
