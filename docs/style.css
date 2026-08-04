@@ -1,5 +1,5 @@
 /* ============================================================
-   Flava Docs — 完整样式表（最终版 v10）
+   Flava Docs — 完整样式表（最终版 v11）
    · 背景画布（fixed 全屏）
    · 顶部导航栏
    · 侧边栏（树形菜单）
@@ -7,7 +7,7 @@
    · 文档文字白色系 + 标题 rgb(190,200,255)
    · 表格全透明、无交替色
    · 搜索框深色主题
-   · 文字与背景左侧留 56px 间距
+   · 文字与背景左侧留 5px 间距（通过 wrapper left 20px - bg left 15px 实现）
    ============================================================ */
 
 /* ---------- Reset ---------- */
@@ -183,15 +183,10 @@ a:hover { color: #ffffff; }
 
 /* ============================================================
    核心：半透明白色圆角矩形背景
-   - 与 .content-wrapper 同级，直接挂 body 下
-   - position: fixed → 永远钉在视口
-   - top/left/right/bottom 全部固定 → 永远铺满可视区
-   - z-index 5，在画布(0/1)之上、文字容器(10)之下
    ============================================================ */
 .content-bg {
     position: fixed;
     z-index: 5;
-    /* 比文字容器（62/20/20/20）各边外扩 5px，让文字左侧留出 5px 白边 */
     top: 57px;
     left: 15px;
     right: 15px;
@@ -205,7 +200,6 @@ a:hover { color: #ffffff; }
     pointer-events: none;
 }
 
-/* 侧边栏打开时，背景和文字容器一起右移 */
 @media (min-width: 769px) {
     body.sidebar-open .content-bg {
         left: calc(15px + 240px);
@@ -231,11 +225,10 @@ a:hover { color: #ffffff; }
 }
 
 /* ---------- docsify 内容区 ---------- */
-/* 用极高优先级确保 padding 不被任何外部样式覆盖 */
 body .content-wrapper #app {
     position: relative;
     z-index: 1;
-    padding: 36px 48px 36px 56px;   /* ← 左侧 56px，给文字和背景边缘留足呼吸空间 */
+    padding: 36px 48px 36px 0;   /* ← 左侧 padding 改为 0，利用 wrapper left 20px - bg left 15px = 5px 作为间距 */
 }
 
 /* ---------- Markdown 内容（白色系） ---------- */
@@ -244,7 +237,6 @@ body .content-wrapper #app {
     line-height: 1.85;
 }
 
-/* 标题统一浅蓝紫 rgb(190,200,255) */
 .markdown-section h1,
 .markdown-section h2,
 .markdown-section h3,
@@ -271,7 +263,6 @@ body .content-wrapper #app {
 
 .markdown-section p { margin-bottom: 14px; color: #ffffff; }
 
-/* 链接 */
 .markdown-section a {
     color: rgb(190, 200, 255);
     border-bottom: 1px dashed rgba(190, 200, 255, 0.5);
@@ -282,7 +273,6 @@ body .content-wrapper #app {
     border-bottom-color: #ffffff;
 }
 
-/* 行内 code */
 .markdown-section code {
     background: rgba(255, 255, 255, 0.15);
     color: #ffffff;
@@ -293,7 +283,6 @@ body .content-wrapper #app {
     font-weight: 500;
 }
 
-/* 代码块 */
 .markdown-section pre {
     background: rgba(20, 20, 28, 0.92) !important;
     border: 1px solid rgba(190, 200, 255, 0.2);
@@ -312,7 +301,6 @@ body .content-wrapper #app {
     font-weight: 400;
 }
 
-/* 引用块 */
 .markdown-section blockquote {
     border-left: 4px solid rgb(190, 200, 255);
     background: rgba(190, 200, 255, 0.06);
@@ -322,7 +310,6 @@ body .content-wrapper #app {
     color: #f0f0f0;
 }
 
-/* 表格 —— 全透明，无交替色 */
 .markdown-section table {
     width: 100%;
     border-collapse: collapse;
@@ -392,7 +379,6 @@ body .content-wrapper #app {
     box-shadow: 0 0 12px rgba(190, 200, 255, 0.3);
 }
 
-/* 搜索结果面板 */
 .search .results-panel {
     background: rgba(20, 20, 28, 0.95) !important;
     border: 1px solid rgba(190, 200, 255, 0.25) !important;
@@ -428,7 +414,7 @@ body .content-wrapper #app {
         bottom: 12px;
         border-radius: 14px;
     }
-    body .content-wrapper #app { padding: 24px 18px 24px 24px; }
+    body .content-wrapper #app { padding: 24px 18px 24px 0; }
     .markdown-section h1 { font-size: 1.6rem; }
     .markdown-section h2 { font-size: 1.25rem; }
 }
