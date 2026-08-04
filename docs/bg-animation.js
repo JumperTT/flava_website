@@ -4,7 +4,9 @@
    1. 背景动画：白色旋转网格 + 火焰光晕 + 漂浮粒子
    2. 侧边栏交互：树形折叠 / 展开 / 路由跳转
    3. 与 docsify 联动：点击侧边栏 → 修改 hash → docsify 加载对应 .md
-   4. 内容区白色半透明背景（fixed 定位，始终覆盖可视区）
+   4. 内容区背景：fixed 钉在视口，永远铺满可视区
+   5. 返回主页 → 跳转随机子域名.flava.woen.pics
+   6. 搜索结果点击后清空搜索框
    ============================================================ */
 
 (function () {
@@ -151,11 +153,13 @@
         const diag = Math.sqrt(gridCanvas.width ** 2 + gridCanvas.height ** 2);
         const s = -diag, e = diag;
 
+        // 20px 暗网
         gridCtx.strokeStyle = 'rgba(255,255,255,0.06)';
         gridCtx.lineWidth = 1;
         for (let x = s; x <= e; x += 20) { gridCtx.beginPath(); gridCtx.moveTo(x, s); gridCtx.lineTo(x, e); gridCtx.stroke(); }
         for (let y = s; y <= e; y += 20) { gridCtx.beginPath(); gridCtx.moveTo(s, y); gridCtx.lineTo(e, y); gridCtx.stroke(); }
 
+        // 10px 亮网
         gridCtx.strokeStyle = 'rgba(255,255,255,0.15)';
         gridCtx.lineWidth = 1.2;
         for (let x = s; x <= e; x += 10) { gridCtx.beginPath(); gridCtx.moveTo(x, s); gridCtx.lineTo(x, e); gridCtx.stroke(); }
@@ -302,6 +306,7 @@
         updateFlamePositions();
         updateGlowPositions();
 
+        // 红色火焰
         fireCtx.beginPath();
         fireCtx.moveTo(redPoints[0].x, redPoints[0].y);
         for (let i = 1; i < redPoints.length; i++) fireCtx.lineTo(redPoints[i].x, redPoints[i].y);
@@ -315,6 +320,7 @@
         fireCtx.fillStyle = rg;
         fireCtx.fill();
 
+        // 橙色火焰
         fireCtx.beginPath();
         fireCtx.moveTo(orangePoints[0].x, orangePoints[0].y);
         for (let i = 1; i < orangePoints.length; i++) fireCtx.lineTo(orangePoints[i].x, orangePoints[i].y);
@@ -328,6 +334,7 @@
         fireCtx.fillStyle = og;
         fireCtx.fill();
 
+        // 黄色火焰
         fireCtx.beginPath();
         fireCtx.moveTo(yellowPoints[0].x, yellowPoints[0].y);
         for (let i = 1; i < yellowPoints.length; i++) fireCtx.lineTo(yellowPoints[i].x, yellowPoints[i].y);
@@ -363,20 +370,18 @@
         drawGrid();
     }
 
+    // 暴露给 docsify 插件
     window.__resizeCanvas = resizeCanvas;
 
     /* ============================================================
-       核心：白色背景定位
-       ------------------------------------------------
-       关键改动：.content-bg 在 CSS 中是 position:fixed，
-       直接相对于视口定位，永远覆盖可视区域。
-       这里只需要处理侧边栏打开/关闭时的 left 偏移，
-       以及路由切换后的滚动复位。
+       内容区背景 — 复位滚动位置
+       因为 .content-bg 是 position:fixed 钉在视口上，
+       它永远铺满可视区域，无需手动设高度。
+       这里只负责路由切换后让内容滚回顶部。
        ============================================================ */
     function adjustContentBg() {
         if (!contentWrapper) return;
-
-        // 路由切换后回到顶部 —— 用双重 rAF 确保 docsify 渲染完成
+        // 双重 rAF 确保 docsify 渲染完成后再复位
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
                 contentWrapper.scrollTop = 0;
@@ -385,6 +390,46 @@
     }
 
     window.__adjustContentBg = adjustContentBg;
+
+    /* ============================================================
+       随机子域名生成
+       规则：小写英文字母，长度随机（4~10）
+       ============================================================ */
+    function generateRandomSubdomain() {
+        const len = Math.floor(Math.random() * 7) + 4; // 4~10
+        let s = '';
+        for (let i = 0; i < len; i++) {
+            s += String.fromCharCode(97 + Math.floor(Math.random() * 26));
+        }
+        return s;
+    }
+
+    /* ============================================================
+       搜索结果点击 → 清空搜索框
+       ============================================================ */
+    function bindSearchResultClear() {
+        // docsify 搜索结果渲染在 .search .results-panel 里
+        const panel = document.querySelector('.search .results-panel');
+        if (!panel) return;
+
+        // 用事件委托：点击任意结果链接
+        panel.addEventListener('click', function handler(e) {
+            const link = e.target.closest('a');
+            if (!link) return;
+
+            // 等 docsify 完成路由跳转后再清空
+            setTimeout(() => {
+                const input = document.querySelector('.search input');
+                if (input) {
+                    input.value = '';
+                    // 触发 input 事件让搜索插件刷新结果面板（隐藏它）
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }, 50);
+        }, true); // 捕获阶段，确保在 docsify 处理之前绑定
+    }
+
+    window.__bindSearchResultClear = bindSearchResultClear;
 
     /* ============================================================
        侧边栏 — 菜单折叠 / 展开
@@ -435,6 +480,7 @@
 
     /* ============================================================
        侧边栏 — 菜单按钮 & 返回主页
+       返回主页 → 跳转 随机小写英文字母.flava.woen.pics
        ============================================================ */
     function initSidebarControls() {
         if (menuIcon) {
@@ -446,7 +492,15 @@
         if (homeBtn) {
             homeBtn.addEventListener('click', e => {
                 e.preventDefault();
-                location.hash = '#/';
+                // 生成随机子域名并跳转
+                const sub = generateRandomSubdomain();
+                const target = 'https://' + sub + '.flava.woen.pics';
+                // 如果当前就在该域名下，则用 hash 回到首页
+                if (location.hostname.endsWith('flava.woen.pics')) {
+                    location.hash = '#/';
+                } else {
+                    location.href = target;
+                }
                 sidebar.classList.remove('active');
                 document.body.classList.remove('sidebar-open');
             });
@@ -463,13 +517,20 @@
         initTreeToggle();
         initTreeNavigation();
 
+        // 初始高亮
         setTimeout(syncSidebar, 100);
+        // 初始滚动复位
         setTimeout(adjustContentBg, 200);
+        // 初始绑定搜索结果清空
+        setTimeout(bindSearchResultClear, 300);
 
+        // 窗口缩放
         window.addEventListener('resize', () => resizeCanvas());
+
+        // hash 变化 → 同步高亮 + 复位
         window.addEventListener('hashchange', () => {
             syncSidebar();
-            setTimeout(adjustContentBg, 100);
+            adjustContentBg();
         });
     }
 

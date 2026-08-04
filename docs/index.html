@@ -70,26 +70,29 @@
     <canvas id="gridCanvas" class="grid-canvas"></canvas>
     <canvas id="fireCanvas" class="fire-canvas"></canvas>
 
-    <!-- ========== 文档内容区 ========== -->
+    <!-- ========== 半透明白色圆角矩形背景（fixed 钉在视口上） ========== -->
+    <div class="content-bg" id="contentBg"></div>
+
+    <!-- ========== 文档内容区（独立滚动容器） ========== -->
     <main class="content-wrapper" id="contentWrapper">
-        <!-- 半透明白色圆角矩形背景层 -->
-        <div class="content-bg" id="contentBg"></div>
         <!-- docsify 挂载点 -->
         <div id="app"></div>
     </main>
 
     <!-- ========== 脚本 ========== -->
+    <!-- 背景动画 + 侧边栏交互（必须在 docsify 之前加载，确保钩子就绪） -->
+    <script src="bg-animation.js"></script>
     <script>
-        // docsify 配置
+        // docsify 配置 —— 关闭自带侧边栏，由我们自定义
         window.$docsify = {
             name: 'Flava 文档',
             repo: '',
             homepage: 'README.md',
-            loadSidebar: false,
+            loadSidebar: false,         // 关闭 docsify 默认侧边栏
             loadNavbar: false,
             subMaxLevel: 3,
             maxLevel: 4,
-            auto2top: false,           // 关键：关闭，避免干扰 fixed 容器的滚动
+            auto2top: false,           // 关闭：滚动由 content-wrapper 自己管
             search: {
                 placeholder: '🔍 搜索文档',
                 noData: '未找到结果'
@@ -97,26 +100,27 @@
             plugins: [
                 function (hook, vm) {
                     hook.doneEach(function () {
-                        // 重绘背景动画
+                        // 1) 路由切换后重绘背景画布
                         if (window.__resizeCanvas) {
                             window.__resizeCanvas();
                         }
-                        // 同步侧边栏高亮
+                        // 2) 同步侧边栏高亮
                         if (window.__syncSidebar) {
                             window.__syncSidebar();
                         }
-                        // 调整白色背景高度 + 滚动复位
+                        // 3) 复位滚动位置 + 校准背景
                         if (window.__adjustContentBg) {
                             window.__adjustContentBg();
+                        }
+                        // 4) 给搜索结果绑定"点击后清空搜索框"
+                        if (window.__bindSearchResultClear) {
+                            window.__bindSearchResultClear();
                         }
                     });
                 }
             ]
         };
     </script>
-    <!-- 先加载背景动画（定义全局函数） -->
-    <script src="bg-animation.js"></script>
-    <!-- 再加载 docsify（避免执行顺序问题） -->
     <script src="https://cdn.jsdelivr.net/npm/docsify@5/lib/docsify.min.js"></script>
     <!-- 搜索插件 -->
     <script src="https://cdn.jsdelivr.net/npm/docsify@5/lib/plugins/search.min.js"></script>
