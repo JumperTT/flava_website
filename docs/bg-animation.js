@@ -5,7 +5,7 @@
       （从主站 index.html 移植）
    2. 侧边栏交互：树形折叠 / 展开 / 路由跳转
    3. 与 docsify 联动：点击侧边栏 → 修改 hash → docsify 加载对应 .md
-   4. 内容区半透明白色背景高度自适应（跟随内容撑开）
+   4. 内容区半透明白色背景高度自适应（始终覆盖全部文字）
    ============================================================ */
 
 (function () {
@@ -23,6 +23,7 @@
     const homeBtn = document.getElementById('homeBtn');
     const contentWrapper = document.getElementById('contentWrapper');
     const contentBg = document.querySelector('.content-bg');
+    const app = document.getElementById('app');
 
     /* ============================================================
        背景动画 — 数据
@@ -373,42 +374,50 @@
     window.__resizeCanvas = resizeCanvas;
 
     /* ============================================================
-       内容区背景 — 高度自适应
-       ✅ 关键修复：
-       .content-bg 是 sticky 定位，min-height:100% 让它至少铺满可视区。
-       这里再做一个双保险：用 ResizeObserver 监听 #app 的内容高度，
-       当内容比可视区高时，强制把 .content-bg 的高度设为内容高度，
-       保证长文档滚动时背景始终覆盖所有文字。
+       内容区背景 — 高度自适应 + 滚动复位
+       ============================================================
+       问题回顾：
+       - 打开文档要下滑才看得见 → docsify auto2top 把 window 滚到顶部，
+         但我们的滚动容器是 content-wrapper，必须在渲染后手动复位它。
+       - 右侧没有间隙 → content-bg 用 sticky + 100% 宽度，
+         并强制 height = max(内容高度, 可视高度)。
        ============================================================ */
+    function syncBgHeight() {
+        if (!contentBg || !contentWrapper || !app) return;
+        const wrapperH = contentWrapper.clientHeight;
+        const contentH = app.scrollHeight;
+        const target = Math.max(wrapperH, contentH);
+        contentBg.style.height = target + 'px';
+    }
+
     function adjustContentBg() {
-        if (!contentWrapper || !contentBg) return;
+        if (!contentWrapper) return;
 
-        // 回到顶部
-        contentWrapper.scrollTop = 0;
+        // ① 等一帧再复位滚动 —— 必须晚于 docsify 的 auto2top
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                contentWrapper.scrollTop = 0;
+            });
+        });
 
-        // 双保险：用 ResizeObserver 监听内容实际高度
-        if (window.ResizeObserver && !adjustContentBg._observer) {
-            const app = document.getElementById('app');
-            if (app) {
-                adjustContentBg._observer = new ResizeObserver(() => {
-                    const appHeight = app.scrollHeight;
-                    const wrapperHeight = contentWrapper.clientHeight;
-                    // 内容高度超过可视区时，让背景至少等于内容高度
-                    const target = Math.max(appHeight, wrapperHeight);
-                    contentBg.style.height = target + 'px';
-                });
-                adjustContentBg._observer.observe(app);
-                // 首次立即执行一次
-                const appHeight = app.scrollHeight;
-                const wrapperHeight = contentWrapper.clientHeight;
-                const target = Math.max(appHeight, wrapperHeight);
-                contentBg.style.height = target + 'px';
-            }
-        }
+        // ② 校准背景高度（立即 + 延时双次，覆盖图片/代码高亮等异步渲染）
+        syncBgHeight();
+        setTimeout(syncBgHeight, 100);
+        setTimeout(syncBgHeight, 500);
     }
 
     // 暴露给 docsify 插件
     window.__adjustContentBg = adjustContentBg;
+
+    // ③ ResizeObserver：内容高度变化时自动重算
+    let _bgObserver = null;
+    function initBgObserver() {
+        if (_bgObserver || !window.ResizeObserver || !app || !contentBg) return;
+        _bgObserver = new ResizeObserver(() => syncBgHeight());
+        _bgObserver.observe(app);
+        // 窗口尺寸变化也重算
+        window.addEventListener('resize', syncBgHeight);
+    }
 
     /* ============================================================
        侧边栏 — 菜单折叠 / 展开
@@ -487,19 +496,14 @@
         initSidebarControls();
         initTreeToggle();
         initTreeNavigation();
+        initBgObserver();   // 启动背景高度监听
 
+        // 初始高亮 & 背景校准
         setTimeout(syncSidebar, 100);
-        // 给 docsify 一点渲染时间再量高度
-        setTimeout(adjustContentBg, 300);
-        setTimeout(adjustContentBg, 800);
+        setTimeout(adjustContentBg, 200);
 
         window.addEventListener('resize', () => resizeCanvas());
-
-        // hash 变化 → 同步高亮 + 重新校准背景高度
-        window.addEventListener('hashchange', () => {
-            syncSidebar();
-            setTimeout(adjustContentBg, 300);
-        });
+        window.addEventListener('hashchange', syncSidebar);
     }
 
     if (document.readyState === 'loading') {

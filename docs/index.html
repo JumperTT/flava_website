@@ -80,16 +80,19 @@
 
     <!-- ========== 脚本 ========== -->
     <script>
-        // docsify 配置 —— 关闭自带侧边栏，由我们自定义
+        // docsify 配置
+        // ⚠️ auto2top 必须关掉：它会调用 window.scrollTo(0,0)，
+        //    和我们 fixed 布局的 content-wrapper 内部滚动冲突，
+        //    导致"打开文档要下滑才看得见"。
         window.$docsify = {
             name: 'Flava 文档',
             repo: '',
             homepage: 'README.md',
-            loadSidebar: false,         // 关闭 docsify 默认侧边栏
+            loadSidebar: false,
             loadNavbar: false,
             subMaxLevel: 3,
             maxLevel: 4,
-            auto2top: true,
+            auto2top: false,           // ← 关键：关闭 window 滚动
             search: {
                 placeholder: '🔍 搜索文档',
                 noData: '未找到结果'
@@ -97,15 +100,15 @@
             plugins: [
                 function (hook, vm) {
                     hook.doneEach(function () {
-                        // 路由切换后重绘背景
+                        // 1) 重绘背景画布
                         if (window.__resizeCanvas) {
                             window.__resizeCanvas();
                         }
-                        // 同步侧边栏高亮
+                        // 2) 同步侧边栏高亮
                         if (window.__syncSidebar) {
                             window.__syncSidebar();
                         }
-                        // 确保内容区背景高度跟随内容自适应
+                        // 3) 复位滚动位置 + 校准背景高度
                         if (window.__adjustContentBg) {
                             window.__adjustContentBg();
                         }
@@ -115,9 +118,7 @@
         };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/docsify@5/lib/docsify.min.js"></script>
-    <!-- 搜索插件 -->
     <script src="https://cdn.jsdelivr.net/npm/docsify@5/lib/plugins/search.min.js"></script>
-    <!-- 背景动画 + 侧边栏交互 -->
     <script src="bg-animation.js"></script>
 </body>
 </html>
