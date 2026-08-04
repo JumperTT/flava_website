@@ -4,8 +4,7 @@
    · 顶部导航栏
    · 侧边栏（树形菜单）
    · 文档正文半透明白色圆角矩形背景（20% 透明度，离边缘 20px）
-   · 白色系文字配色
-   · 深色搜索框
+   · docsify 内容区深色主题适配
    · 响应式
    ============================================================ */
 
@@ -27,7 +26,7 @@ body {
     line-height: 1.6;
 }
 
-a { color: rgb(190, 200, 255); text-decoration: none; }
+a { color: #ffd0a0; text-decoration: none; }
 a:hover { color: #ffffff; }
 
 /* ---------- 顶部导航栏 ---------- */
@@ -96,7 +95,7 @@ a:hover { color: #ffffff; }
 
 .back-button {
     display: inline-block;
-    color: rgb(190, 200, 255);
+    color: #ffb380;
     font-size: 0.85rem;
     transition: color 0.2s;
 }
@@ -139,13 +138,13 @@ a:hover { color: #ffffff; }
 
 .tree-list .tree-label:hover,
 .tree-list [data-route]:hover {
-    color: rgb(190, 200, 255);
-    background: rgba(190, 200, 255, 0.08);
+    color: #ffb380;
+    background: rgba(255, 69, 0, 0.08);
 }
 
 .tree-list [data-route].active {
-    color: #ffffff;
-    background: rgba(190, 200, 255, 0.15);
+    color: #ffd0a0;
+    background: rgba(255, 69, 0, 0.12);
     font-weight: 600;
 }
 
@@ -160,7 +159,7 @@ a:hover { color: #ffffff; }
 
 .tree-item.has-children.open > .tree-label::before {
     content: '▾ ';
-    color: rgb(190, 200, 255);
+    color: #ffb380;
 }
 
 /* 子菜单 */
@@ -193,52 +192,47 @@ a:hover { color: #ffffff; }
     pointer-events: none;
 }
 
-/* ---------- 半透明白色圆角矩形背景（20% 透明度） ----------
-   关键：position: fixed 钉在视口上
-   → 不管文档多长，背景永远铺满可视区
-   → left/right: 20px 相对于视口，右侧间隙永远精确
-*/
+/* ---------- 半透明白色圆角矩形背景（fixed 钉在视口） ---------- */
 .content-bg {
     position: fixed;
     top: 62px;          /* 42px 导航栏 + 20px 间距 */
     left: 20px;
     right: 20px;
     bottom: 20px;
-    background: rgba(255, 255, 255, 0.20);
+    background: rgba(255, 255, 255, 0.20);   /* 20% 白色 */
     border-radius: 20px;
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     border: 1px solid rgba(255, 255, 255, 0.18);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    z-index: 5;          /* 在画布之上、内容区之下 */
+    z-index: 5;          /* 在背景画布之上，在内容区之下 */
     pointer-events: none;
+    transition: left 0.3s ease;
 }
 
-/* 侧边栏打开时背景右移（仅桌面端） */
+/* 侧边栏打开时背景左边界右移 */
 @media (min-width: 769px) {
     body.sidebar-open .content-bg {
         left: calc(20px + 240px);
     }
 }
 
-/* ---------- 文档内容区包裹层 ----------
-   离网页边缘 20px，与 .content-bg 完全对齐
-*/
+/* ---------- 文档内容区包裹层 ---------- */
 .content-wrapper {
-    position: fixed;
+    position: relative;
     z-index: 10;
-    top: 62px;
-    left: 20px;
-    right: 20px;
-    bottom: 20px;
-    overflow-y: auto;
-    transition: left 0.3s ease, right 0.3s ease;
+    margin-top: 62px;       /* 导航栏 42 + 20 间距 */
+    margin-left: 20px;
+    margin-right: 20px;
+    margin-bottom: 20px;
+    min-height: calc(100vh - 82px);
+    overflow-y: visible;     /* 让内容自然撑开，不在此处截断 */
 }
 
-/* 侧边栏打开时内容区右移（仅桌面端） */
+/* 侧边栏打开时内容区左移 */
 @media (min-width: 769px) {
     body.sidebar-open .content-wrapper {
-        left: calc(20px + 240px);
+        margin-left: calc(20px + 240px);
     }
 }
 
@@ -260,33 +254,33 @@ a:hover { color: #ffffff; }
 .markdown-section h2,
 .markdown-section h3,
 .markdown-section h4 {
-    color: #ffffff;
+    color: rgb(190, 200, 255);   /* ← 用户指定色 */
     margin-top: 28px;
     margin-bottom: 14px;
     font-weight: 700;
-    text-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
+    text-shadow: 0 0 12px rgba(190, 200, 255, 0.25);
 }
 
 .markdown-section h1 {
     font-size: 2rem;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+    border-bottom: 2px solid rgba(190, 200, 255, 0.35);
     padding-bottom: 10px;
 }
 
 .markdown-section h2 {
     font-size: 1.45rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1px solid rgba(190, 200, 255, 0.25);
     padding-bottom: 6px;
 }
 
 .markdown-section h3 { font-size: 1.15rem; }
-.markdown-section h4 { font-size: 1rem; color: rgb(220, 225, 255); }
+.markdown-section h4 { font-size: 1rem; }
 
 .markdown-section p { margin-bottom: 14px; color: #ffffff; }
 
 .markdown-section a {
-    color: rgb(190, 200, 255);
-    border-bottom: 1px dashed rgba(190, 200, 255, 0.5);
+    color: #ffd0a0;
+    border-bottom: 1px dashed rgba(255, 208, 160, 0.4);
     transition: all 0.2s;
 }
 .markdown-section a:hover {
@@ -295,7 +289,7 @@ a:hover { color: #ffffff; }
 }
 
 .markdown-section code {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.18);
     color: #ffffff;
     padding: 2px 6px;
     border-radius: 4px;
@@ -305,8 +299,8 @@ a:hover { color: #ffffff; }
 }
 
 .markdown-section pre {
-    background: rgba(20, 20, 20, 0.92) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(20, 20, 30, 0.92) !important;
+    border: 1px solid rgba(190, 200, 255, 0.2);
     border-radius: 10px;
     padding: 18px;
     overflow-x: auto;
@@ -316,7 +310,7 @@ a:hover { color: #ffffff; }
 
 .markdown-section pre code {
     background: none;
-    color: #e8e8e8;
+    color: #e8e8ff;
     padding: 0;
     font-size: 0.85rem;
     line-height: 1.7;
@@ -344,14 +338,14 @@ a:hover { color: #ffffff; }
     color: #ffffff;
     padding: 10px 14px;
     text-align: left;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(190, 200, 255, 0.25);
     font-weight: 700;
 }
 
 .markdown-section td {
     padding: 10px 14px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #f5f5f5;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #ffffff;
 }
 
 .markdown-section tr:nth-child(even) td {
@@ -359,20 +353,20 @@ a:hover { color: #ffffff; }
 }
 
 .markdown-section tr:hover td {
-    background: rgba(190, 200, 255, 0.08);
+    background: rgba(190, 200, 255, 0.06);
 }
 
 .markdown-section hr {
     border: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    border-top: 1px solid rgba(190, 200, 255, 0.25);
     margin: 28px 0;
 }
 
 .markdown-section img {
     max-width: 100%;
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(190, 200, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .markdown-section ul,
@@ -382,9 +376,9 @@ a:hover { color: #ffffff; }
     color: #ffffff;
 }
 
-.markdown-section li { margin-bottom: 6px; }
+.markdown-section li { margin-bottom: 6px; color: #ffffff; }
 
-/* ---------- docsify 搜索框（深色主题） ---------- */
+/* ---------- docsify 搜索框（深色配色） ---------- */
 .search {
     margin-bottom: 24px;
 }
@@ -392,10 +386,10 @@ a:hover { color: #ffffff; }
 .search input {
     width: 100%;
     padding: 10px 16px;
-    background: rgba(30, 30, 30, 0.85);
-    border: 1px solid rgba(190, 200, 255, 0.25);
+    background: rgba(30, 30, 40, 0.85);       /* 深色背景 */
+    border: 1px solid rgba(190, 200, 255, 0.3);
     border-radius: 8px;
-    color: #ffffff;
+    color: #ffffff;                            /* 白色文字 */
     font-size: 0.9rem;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -411,11 +405,12 @@ a:hover { color: #ffffff; }
 }
 
 .search .results-panel {
-    background: rgba(30, 30, 30, 0.95);
+    background: rgba(30, 30, 40, 0.95);        /* 深色结果面板 */
     border: 1px solid rgba(190, 200, 255, 0.2);
     border-radius: 8px;
     margin-top: 6px;
     overflow: hidden;
+    backdrop-filter: blur(8px);
 }
 
 .search .results-panel a {
@@ -424,9 +419,11 @@ a:hover { color: #ffffff; }
     display: block;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     font-size: 0.88rem;
+    transition: background 0.15s, color 0.15s;
 }
 
-.search .results-panel a:hover {
+.search .results-panel a:hover,
+.search .results-panel a.active {
     background: rgba(190, 200, 255, 0.12);
     color: #ffffff;
 }
@@ -436,10 +433,10 @@ a:hover { color: #ffffff; }
 /* ---------- 响应式 ---------- */
 @media (max-width: 768px) {
     .content-wrapper {
-        top: 56px;
-        left: 20px;
-        right: 20px;
-        bottom: 20px;
+        margin-top: 56px;
+        margin-left: 20px;
+        margin-right: 20px;
+        margin-bottom: 20px;
         padding: 0;
     }
 
@@ -467,7 +464,7 @@ a:hover { color: #ffffff; }
 
 /* ---------- 加载提示 ---------- */
 #app > p:first-child {
-    color: rgba(255,255,255,0.5);
+    color: rgba(255,255,255,0.4);
     font-size: 0.9rem;
 }
 

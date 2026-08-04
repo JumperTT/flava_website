@@ -23,7 +23,6 @@
     <!-- ========== 侧边栏（自定义，docsify 不接管） ========== -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <!-- 返回主页：跳转到随机小写英文字母.flava.woen.pics -->
             <a href="#" class="back-button" id="homeBtn">← 返回主页</a>
         </div>
         <div class="sidebar-body">
@@ -71,17 +70,17 @@
     <canvas id="gridCanvas" class="grid-canvas"></canvas>
     <canvas id="fireCanvas" class="fire-canvas"></canvas>
 
-    <!-- ========== 半透明白色圆角矩形背景层（fixed 钉在视口上） ========== -->
+    <!-- ========== 半透明白色圆角矩形背景（fixed 钉在视口） ========== -->
     <div class="content-bg" id="contentBg"></div>
 
-    <!-- ========== 文档内容区（滚动容器，位于背景层之上） ========== -->
+    <!-- ========== 文档内容区 ========== -->
     <main class="content-wrapper" id="contentWrapper">
         <!-- docsify 挂载点 -->
         <div id="app"></div>
     </main>
 
     <!-- ========== 脚本 ========== -->
-    <!-- 先加载背景动画 + 侧边栏交互（确保全局函数在 docsify 钩子触发前就绪） -->
+    <!-- 背景动画 + 侧边栏交互（必须在 docsify 之前加载） -->
     <script src="bg-animation.js"></script>
     <script>
         // docsify 配置 —— 关闭自带侧边栏，由我们自定义
@@ -89,11 +88,11 @@
             name: 'Flava 文档',
             repo: '',
             homepage: 'README.md',
-            loadSidebar: false,         // 关闭 docsify 默认侧边栏
+            loadSidebar: false,
             loadNavbar: false,
             subMaxLevel: 3,
             maxLevel: 4,
-            auto2top: false,           // 关掉：滚动容器是 fixed 的 contentWrapper，不是 window
+            auto2top: false,         // 关闭，由我们自己控制滚动
             search: {
                 placeholder: '🔍 搜索文档',
                 noData: '未找到结果'
@@ -109,13 +108,13 @@
                         if (window.__syncSidebar) {
                             window.__syncSidebar();
                         }
-                        // 路由切换后复位滚动位置
+                        // 确保内容区背景高度跟随内容自适应
                         if (window.__adjustContentBg) {
                             window.__adjustContentBg();
                         }
-                        // 路由切换后清空搜索框
-                        if (window.__clearSearchInput) {
-                            window.__clearSearchInput();
+                        // 清空搜索框
+                        if (window.__clearSearch) {
+                            window.__clearSearch();
                         }
                     });
                 }
