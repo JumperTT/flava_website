@@ -373,16 +373,14 @@
     window.__resizeCanvas = resizeCanvas;
 
     /* ============================================================
-       内容区背景 — 高度自适应
+       内容区背景 — 路由切换后复位滚动位置
+       因为 .content-wrapper 是 fixed 布局（top:62px/bottom:20px），
+       高度已由 top/bottom 自动撑满，无需手动设 min-height。
        ============================================================ */
     function adjustContentBg() {
         if (!contentWrapper) return;
-        const app = document.getElementById('app');
-        if (!app) return;
-        // 让 content-wrapper 的高度跟随 #app 的实际内容高度
-        // CSS 已经用 min-height 处理，这里做微调确保背景贴合
-        const appHeight = app.scrollHeight;
-        contentWrapper.style.minHeight = (appHeight + 56) + 'px';
+        // 路由切换后回到顶部，保证每次打开新文档都从开头阅读
+        contentWrapper.scrollTop = 0;
     }
 
     // 暴露给 docsify 插件
