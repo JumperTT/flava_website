@@ -1,72 +1,114 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Flava文档</title>
-<link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flava 文档</title>
+    <!-- docsify 主题样式 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@5/themes/vue.css" />
+    <!-- 自定义样式 -->
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<div class="fullscreen-container">
-
-    <!-- 顶部栏 -->
-    <div class="top-navbar">
+    <!-- ========== 顶部导航栏 ========== -->
+    <nav class="top-navbar">
         <div class="menu-icon" id="menuIcon">
             <span></span>
             <span></span>
             <span></span>
         </div>
-        <div class="nav-text">Eeeee</div>
-    </div>
+        <div class="nav-text">Flava Docs</div>
+    </nav>
 
-    <!-- 侧边栏 -->
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-top">
-            <a href="#" class="back-button" id="homeBtn">返回根目录</a>
+    <!-- ========== 侧边栏（自定义，docsify 不接管） ========== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="#" class="back-button" id="homeBtn">← 返回主页</a>
         </div>
-
-        <div class="sidebar-bottom">
+        <div class="sidebar-body">
             <div class="tree-title">文档列表</div>
-
-            <ul class="tree-list">
-                <li class="tree-item" data-file="index.md">首页</li>
-
-                <!-- 父项（有箭头） -->
+            <ul class="tree-list" id="sidebarTree">
+                <li class="tree-item" data-route="README">
+                    <span>🏠 首页</span>
+                </li>
                 <li class="tree-item has-children open">
-                    <span class="tree-label">项目文档</span>
+                    <span class="tree-label">📁 项目文档</span>
                     <ul class="tree-children">
-                        <li class="tree-item" data-file="project/intro.md">项目介绍</li>
-                        <li class="tree-item" data-file="project/design.md">设计文档</li>
-                        <li class="tree-item" data-file="project/test.md">测试用例</li>
+                        <li class="tree-item" data-route="project/intro">
+                            <span>项目介绍</span>
+                        </li>
+                        <li class="tree-item" data-route="project/design">
+                            <span>设计文档</span>
+                        </li>
+                        <li class="tree-item" data-route="project/test">
+                            <span>测试用例</span>
+                        </li>
                     </ul>
                 </li>
-
-                <li class="tree-item has-children">
-                    <span class="tree-label">技术文档</span>
+                <li class="tree-item has-children open">
+                    <span class="tree-label">🔧 技术文档</span>
                     <ul class="tree-children">
-                        <li class="tree-item" data-file="tech/api.md">API 文档</li>
-                        <li class="tree-item" data-file="tech/deploy.md">部署指南</li>
+                        <li class="tree-item" data-route="tech/api">
+                            <span>API 文档</span>
+                        </li>
+                        <li class="tree-item" data-route="tech/deploy">
+                            <span>部署指南</span>
+                        </li>
                     </ul>
                 </li>
-
-                <li class="tree-item" data-file="meeting.md">会议记录</li>
-                <li class="tree-item" data-file="guide.md">用户手册</li>
+                <li class="tree-item" data-route="meeting">
+                    <span>📝 会议记录</span>
+                </li>
+                <li class="tree-item" data-route="guide">
+                    <span>📖 用户手册</span>
+                </li>
             </ul>
         </div>
-    </div>
+    </aside>
 
-    <!-- 网格 / 光晕 -->
+    <!-- ========== 背景画布（来自主站） ========== -->
     <canvas id="gridCanvas" class="grid-canvas"></canvas>
-    <canvas id="glowCanvas" class="glow-canvas"></canvas>
+    <canvas id="fireCanvas" class="fire-canvas"></canvas>
 
-    <!-- 文档区 -->
-    <div class="center-rectangle" id="contentArea">
-        <p>正在加载文档...</p>
-    </div>
+    <!-- ========== docsify 挂载点 ========== -->
+    <div id="app"></div>
 
-</div>
-
-<script src="lib/marked.min.js"></script>
-<script src="main.js"></script>
+    <!-- ========== 脚本 ========== -->
+    <script>
+        // docsify 配置 —— 关闭自带侧边栏，由我们自定义
+        window.$docsify = {
+            name: 'Flava 文档',
+            repo: '',
+            homepage: 'README.md',
+            loadSidebar: false,         // 关闭 docsify 默认侧边栏
+            loadNavbar: false,
+            subMaxLevel: 3,
+            maxLevel: 4,
+            auto2top: true,
+            search: {
+                placeholder: '🔍 搜索文档',
+                noData: '未找到结果'
+            },
+            plugins: [
+                function (hook, vm) {
+                    hook.doneEach(function () {
+                        // 路由切换后重绘背景
+                        if (window.__resizeCanvas) {
+                            window.__resizeCanvas();
+                        }
+                        // 同步侧边栏高亮
+                        if (window.__syncSidebar) {
+                            window.__syncSidebar();
+                        }
+                    });
+                }
+            ]
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/docsify@5/lib/docsify.min.js"></script>
+    <!-- 搜索插件 -->
+    <script src="https://cdn.jsdelivr.net/npm/docsify@5/lib/plugins/search.min.js"></script>
+    <!-- 背景动画 + 侧边栏交互 -->
+    <script src="bg-animation.js"></script>
 </body>
 </html>
