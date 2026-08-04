@@ -5,7 +5,7 @@
       （从主站 index.html 移植）
    2. 侧边栏交互：树形折叠 / 展开 / 路由跳转
    3. 与 docsify 联动：点击侧边栏 → 修改 hash → docsify 加载对应 .md
-   4. 内容区半透明白色背景高度自适应
+   4. 内容区半透明白色背景高度自适应（跟随内容撑开）
    ============================================================ */
 
 (function () {
@@ -22,6 +22,7 @@
     const menuIcon = document.getElementById('menuIcon');
     const homeBtn = document.getElementById('homeBtn');
     const contentWrapper = document.getElementById('contentWrapper');
+    const contentBg = document.querySelector('.content-bg');
 
     /* ============================================================
        背景动画 — 数据
@@ -289,7 +290,6 @@
     function drawFire() {
         fireCtx.clearRect(0, 0, fireCanvas.width, fireCanvas.height);
 
-        // 光晕
         backgroundGlows.forEach(g => {
             const grad = fireCtx.createRadialGradient(g.x, g.y, 0, g.x, g.y, g.radius);
             grad.addColorStop(0, g.color);
@@ -373,14 +373,38 @@
     window.__resizeCanvas = resizeCanvas;
 
     /* ============================================================
-       内容区背景 — 路由切换后复位滚动位置
-       因为 .content-wrapper 是 fixed 布局（top:62px/bottom:20px），
-       高度已由 top/bottom 自动撑满，无需手动设 min-height。
+       内容区背景 — 高度自适应
+       ✅ 关键修复：
+       .content-bg 是 sticky 定位，min-height:100% 让它至少铺满可视区。
+       这里再做一个双保险：用 ResizeObserver 监听 #app 的内容高度，
+       当内容比可视区高时，强制把 .content-bg 的高度设为内容高度，
+       保证长文档滚动时背景始终覆盖所有文字。
        ============================================================ */
     function adjustContentBg() {
-        if (!contentWrapper) return;
-        // 路由切换后回到顶部，保证每次打开新文档都从开头阅读
+        if (!contentWrapper || !contentBg) return;
+
+        // 回到顶部
         contentWrapper.scrollTop = 0;
+
+        // 双保险：用 ResizeObserver 监听内容实际高度
+        if (window.ResizeObserver && !adjustContentBg._observer) {
+            const app = document.getElementById('app');
+            if (app) {
+                adjustContentBg._observer = new ResizeObserver(() => {
+                    const appHeight = app.scrollHeight;
+                    const wrapperHeight = contentWrapper.clientHeight;
+                    // 内容高度超过可视区时，让背景至少等于内容高度
+                    const target = Math.max(appHeight, wrapperHeight);
+                    contentBg.style.height = target + 'px';
+                });
+                adjustContentBg._observer.observe(app);
+                // 首次立即执行一次
+                const appHeight = app.scrollHeight;
+                const wrapperHeight = contentWrapper.clientHeight;
+                const target = Math.max(appHeight, wrapperHeight);
+                contentBg.style.height = target + 'px';
+            }
+        }
     }
 
     // 暴露给 docsify 插件
@@ -404,9 +428,7 @@
         document.querySelectorAll('.tree-item[data-route]').forEach(item => {
             item.addEventListener('click', () => {
                 const route = item.dataset.route;
-                // 修改 hash，docsify 会拦截并加载对应的 .md 文件
                 location.hash = '#/' + route;
-                // 收起侧边栏（移动端体验）
                 if (window.innerWidth < 768) {
                     sidebar.classList.remove('active');
                     document.body.classList.remove('sidebar-open');
@@ -427,7 +449,6 @@
                 item.classList.add('active');
             } else if (hash && route === hash) {
                 item.classList.add('active');
-                // 自动展开父级
                 const parent = item.closest('.tree-children');
                 if (parent) parent.parentElement.classList.add('open');
             }
@@ -467,16 +488,18 @@
         initTreeToggle();
         initTreeNavigation();
 
-        // 初始高亮
         setTimeout(syncSidebar, 100);
-        // 初始背景高度调整
-        setTimeout(adjustContentBg, 200);
+        // 给 docsify 一点渲染时间再量高度
+        setTimeout(adjustContentBg, 300);
+        setTimeout(adjustContentBg, 800);
 
-        // 窗口缩放
         window.addEventListener('resize', () => resizeCanvas());
 
-        // hash 变化 → 同步高亮
-        window.addEventListener('hashchange', syncSidebar);
+        // hash 变化 → 同步高亮 + 重新校准背景高度
+        window.addEventListener('hashchange', () => {
+            syncSidebar();
+            setTimeout(adjustContentBg, 300);
+        });
     }
 
     if (document.readyState === 'loading') {

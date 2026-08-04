@@ -4,6 +4,7 @@
    · 顶部导航栏
    · 侧边栏（树形菜单）
    · 文档正文半透明白色圆角矩形背景（20% 透明度，离边缘 20px）
+     ✅ 背景高度跟随文档内容自动撑开，长文不会"跑出"白底
    · docsify 内容区暗色主题适配
    · 响应式
    ============================================================ */
@@ -107,7 +108,6 @@ a:hover { color: #ff4500; }
     padding: 12px 8px 20px;
 }
 
-/* 滚动条 */
 .sidebar-body::-webkit-scrollbar { width: 4px; }
 .sidebar-body::-webkit-scrollbar-thumb { background: rgba(255,69,0,0.2); border-radius: 2px; }
 
@@ -120,7 +120,6 @@ a:hover { color: #ff4500; }
     margin-bottom: 8px;
 }
 
-/* 树形列表 */
 .tree-list { list-style: none; }
 .tree-list li { margin: 1px 0; }
 
@@ -148,7 +147,6 @@ a:hover { color: #ff4500; }
     font-weight: 600;
 }
 
-/* 父级箭头 */
 .tree-item.has-children > .tree-label::before {
     content: '▸ ';
     display: inline-block;
@@ -162,7 +160,6 @@ a:hover { color: #ff4500; }
     color: #ff8c42;
 }
 
-/* 子菜单 */
 .tree-children {
     list-style: none;
     padding-left: 16px;
@@ -196,53 +193,63 @@ a:hover { color: #ff4500; }
    离网页边缘 20px：
    - 顶部：导航栏高 42px，再留 20px 间距 → top: 62px
    - 左右下：各 20px
+   内部滚动，背景层会跟着内容一起撑高
 */
 .content-wrapper {
     position: fixed;
     z-index: 10;
-    top: 62px;          /* 42px 导航栏 + 20px 间距 */
+    top: 62px;
     left: 20px;
     right: 20px;
     bottom: 20px;
-    overflow-y: auto;
+    overflow-y: auto;          /* 内容超长时内部滚动 */
+    overflow-x: hidden;
     transition: left 0.3s ease, right 0.3s ease;
+    /* 关键：让内部绝对定位的背景层能相对本容器定位 */
+    transform: translateZ(0);  /* 触发独立层叠上下文 */
 }
 
-/* 侧边栏打开时内容区右移（仅桌面端）—— 左侧再让出 240px */
+/* 侧边栏打开时内容区右移（仅桌面端） */
 @media (min-width: 769px) {
     body.sidebar-open .content-wrapper {
         left: calc(20px + 240px);
     }
 }
 
-/* ---------- 半透明白色圆角矩形背景（20% 透明度） ---------- */
+/* ---------- 半透明白色圆角矩形背景（20% 透明度） ----------
+   关键修复：改用 sticky + min-height:100%，
+   使背景至少铺满可视区，内容超出时自动被撑高，
+   长文档滚动时文字始终有白底
+*/
 .content-bg {
-    position: absolute;
+    position: sticky;          /* ✅ 相对滚动容器粘性定位 */
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.20);   /* 20% 白色 */
+    width: 100%;
+    min-height: 100%;         /* ✅ 至少铺满可视高度 */
+    background: rgba(255, 255, 255, 0.20);
     border-radius: 20px;
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     border: 1px solid rgba(255, 255, 255, 0.18);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    z-index: -1;
+    z-index: 0;               /* 在文字下方 */
     pointer-events: none;
+    /* 让它作为滚动容器内的一个"被撑开的块" */
+    flex: none;
 }
 
 /* ---------- docsify 内容区 ---------- */
 #app {
     position: relative;
-    z-index: 1;
-    padding: 36px 48px;
+    z-index: 1;               /* 文字在背景之上 */
+    padding: 36px 48px 60px;  /* 底部多留点 padding，避免内容贴底 */
     min-height: 100%;
 }
 
-/* ---------- Markdown 内容（深色文字，适配浅色半透明背景） ---------- */
+/* ---------- Markdown 内容（✅ 已提亮配色） ---------- */
 .markdown-section {
-    color: #2a2a2a;
+    color: #1a1a1a;           /* ✅ 更深的文字，对比度更高 */
     line-height: 1.85;
 }
 
@@ -250,34 +257,38 @@ a:hover { color: #ff4500; }
 .markdown-section h2,
 .markdown-section h3,
 .markdown-section h4 {
-    color: #d45500;
+    color: #c04000;           /* ✅ 标题更鲜艳的深橙红 */
     margin-top: 28px;
     margin-bottom: 14px;
-    font-weight: 600;
+    font-weight: 700;         /* ✅ 加粗 */
 }
 
 .markdown-section h1 {
     font-size: 2rem;
-    border-bottom: 2px solid rgba(255, 69, 0, 0.3);
+    border-bottom: 2px solid rgba(255, 69, 0, 0.35);
     padding-bottom: 10px;
-    text-shadow: 0 0 16px rgba(255, 69, 0, 0.15);
+    text-shadow: 0 0 16px rgba(255, 69, 0, 0.2);
 }
 
 .markdown-section h2 {
     font-size: 1.45rem;
-    border-bottom: 1px solid rgba(255, 69, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 69, 0, 0.25);
     padding-bottom: 6px;
 }
 
 .markdown-section h3 { font-size: 1.15rem; }
-.markdown-section h4 { font-size: 1rem; color: #e07020; }
+.markdown-section h4 { font-size: 1rem; color: #d06020; }
 
-.markdown-section p { margin-bottom: 14px; color: #333; }
+.markdown-section p {
+    margin-bottom: 14px;
+    color: #1a1a1a;           /* ✅ 正文提亮到近黑 */
+}
 
 .markdown-section a {
-    color: #d45500;
-    border-bottom: 1px dashed rgba(212, 85, 0, 0.4);
+    color: #c04000;           /* ✅ 链接更醒目 */
+    border-bottom: 1px dashed rgba(192, 64, 0, 0.5);
     transition: all 0.2s;
+    font-weight: 500;
 }
 .markdown-section a:hover {
     color: #ff4500;
@@ -285,17 +296,18 @@ a:hover { color: #ff4500; }
 }
 
 .markdown-section code {
-    background: rgba(255, 69, 0, 0.12);
-    color: #c04000;
+    background: rgba(255, 69, 0, 0.15);   /* ✅ 行内代码底色略加深 */
+    color: #b03000;                        /* ✅ 代码文字更深 */
     padding: 2px 6px;
     border-radius: 4px;
     font-size: 0.88em;
     font-family: 'Fira Code', 'Consolas', monospace;
+    font-weight: 600;
 }
 
 .markdown-section pre {
     background: rgba(30, 30, 30, 0.92) !important;
-    border: 1px solid rgba(255, 69, 0, 0.2);
+    border: 1px solid rgba(255, 69, 0, 0.25);
     border-radius: 10px;
     padding: 18px;
     overflow-x: auto;
@@ -305,19 +317,20 @@ a:hover { color: #ff4500; }
 
 .markdown-section pre code {
     background: none;
-    color: #e8e8e8;
+    color: #f0f0f0;           /* ✅ 代码块内文字略提亮 */
     padding: 0;
     font-size: 0.85rem;
     line-height: 1.7;
+    font-weight: 400;
 }
 
 .markdown-section blockquote {
     border-left: 4px solid #ff4500;
-    background: rgba(255, 69, 0, 0.06);
+    background: rgba(255, 69, 0, 0.08);   /* ✅ 引用块底色加深一点 */
     padding: 12px 18px;
     margin: 16px 0;
     border-radius: 0 8px 8px 0;
-    color: #444;
+    color: #2a2a2a;           /* ✅ 引用文字提亮 */
 }
 
 .markdown-section table {
@@ -328,46 +341,46 @@ a:hover { color: #ff4500; }
 }
 
 .markdown-section th {
-    background: rgba(255, 69, 0, 0.15);
-    color: #c04000;
+    background: rgba(255, 69, 0, 0.18);   /* ✅ 表头底色加深 */
+    color: #a03000;                        /* ✅ 表头文字更深 */
     padding: 10px 14px;
     text-align: left;
-    border: 1px solid rgba(255, 69, 0, 0.25);
-    font-weight: 600;
+    border: 1px solid rgba(255, 69, 0, 0.3);
+    font-weight: 700;
 }
 
 .markdown-section td {
     padding: 10px 14px;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    color: #333;
+    border: 1px solid rgba(0, 0, 0, 0.12);  /* ✅ 单元格边框略加深 */
+    color: #1a1a1a;           /* ✅ 单元格文字提亮 */
 }
 
 .markdown-section tr:nth-child(even) td {
-    background: rgba(0, 0, 0, 0.03);
+    background: rgba(0, 0, 0, 0.04);
 }
 
 .markdown-section tr:hover td {
-    background: rgba(255, 69, 0, 0.05);
+    background: rgba(255, 69, 0, 0.07);
 }
 
 .markdown-section hr {
     border: none;
-    border-top: 1px solid rgba(255, 69, 0, 0.25);
+    border-top: 1px solid rgba(255, 69, 0, 0.3);
     margin: 28px 0;
 }
 
 .markdown-section img {
     max-width: 100%;
     border-radius: 8px;
-    border: 1px solid rgba(255, 69, 0, 0.2);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 69, 0, 0.25);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .markdown-section ul,
 .markdown-section ol {
     padding-left: 1.5em;
     margin-bottom: 14px;
-    color: #333;
+    color: #1a1a1a;           /* ✅ 列表文字提亮 */
 }
 
 .markdown-section li { margin-bottom: 6px; }
@@ -380,13 +393,17 @@ a:hover { color: #ff4500; }
 .search input {
     width: 100%;
     padding: 10px 16px;
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(255, 69, 0, 0.3);
+    background: rgba(255, 255, 255, 0.8);   /* ✅ 搜索框底色提亮 */
+    border: 1px solid rgba(255, 69, 0, 0.35);
     border-radius: 8px;
-    color: #333;
+    color: #1a1a1a;           /* ✅ 输入文字更深 */
     font-size: 0.9rem;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search input::placeholder {
+    color: #888;
 }
 
 .search input:focus {
@@ -395,24 +412,24 @@ a:hover { color: #ff4500; }
 }
 
 .search .results-panel {
-    background: rgba(255, 255, 255, 0.92);
-    border: 1px solid rgba(255, 69, 0, 0.2);
+    background: rgba(255, 255, 255, 0.95);   /* ✅ 结果面板更不透明 */
+    border: 1px solid rgba(255, 69, 0, 0.25);
     border-radius: 8px;
     margin-top: 6px;
     overflow: hidden;
 }
 
 .search .results-panel a {
-    color: #333;
+    color: #1a1a1a;           /* ✅ 结果文字更深 */
     padding: 10px 16px;
     display: block;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     font-size: 0.88rem;
 }
 
 .search .results-panel a:hover {
-    background: rgba(255, 69, 0, 0.08);
-    color: #d45500;
+    background: rgba(255, 69, 0, 0.1);
+    color: #c04000;
 }
 
 .search .results-panel a:last-child { border-bottom: none; }
@@ -420,7 +437,7 @@ a:hover { color: #ff4500; }
 /* ---------- 响应式 ---------- */
 @media (max-width: 768px) {
     .content-wrapper {
-        top: 56px;       /* 42px + 14px 间距（移动端紧凑一点） */
+        top: 56px;
         left: 20px;
         right: 20px;
         bottom: 20px;
@@ -432,7 +449,7 @@ a:hover { color: #ff4500; }
     }
 
     #app {
-        padding: 24px 18px;
+        padding: 24px 18px 40px;
     }
 
     .markdown-section h1 { font-size: 1.6rem; }
@@ -450,7 +467,7 @@ a:hover { color: #ff4500; }
 
 /* ---------- 加载提示 ---------- */
 #app > p:first-child {
-    color: rgba(0,0,0,0.4);
+    color: rgba(0,0,0,0.5);   /* ✅ 略加深 */
     font-size: 0.9rem;
 }
 
