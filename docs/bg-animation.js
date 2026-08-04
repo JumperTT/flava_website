@@ -5,6 +5,7 @@
       （从主站 index.html 移植）
    2. 侧边栏交互：树形折叠 / 展开 / 路由跳转
    3. 与 docsify 联动：点击侧边栏 → 修改 hash → docsify 加载对应 .md
+   4. 内容区半透明白色背景高度自适应
    ============================================================ */
 
 (function () {
@@ -20,6 +21,7 @@
     const sidebar = document.getElementById('sidebar');
     const menuIcon = document.getElementById('menuIcon');
     const homeBtn = document.getElementById('homeBtn');
+    const contentWrapper = document.getElementById('contentWrapper');
 
     /* ============================================================
        背景动画 — 数据
@@ -213,7 +215,7 @@
             if (p.offsetX > p.baseOffsetX + 10) p.velocityOffsetX -= 0.05;
             if (p.offsetX < p.baseOffsetX - 10) p.velocityOffsetX += 0.05;
             p.velocityOffsetY = Math.max(p.minVelocityOffset, Math.min(p.maxVelocityOffset, p.velocityOffsetY));
-            p.velocityOffsetX = Math.max(p.minVelocityOffset, Math.min(p.maxVelocityOffset, p.velocityOffsetX));
+            p.velocityOffsetX = Math.max(p.minVelocityOffset, Math.min(p.minVelocityOffset, p.velocityOffsetX));
             p.velocityOffsetY *= 0.98;
             p.velocityOffsetX *= 0.98;
         });
@@ -371,6 +373,22 @@
     window.__resizeCanvas = resizeCanvas;
 
     /* ============================================================
+       内容区背景 — 高度自适应
+       ============================================================ */
+    function adjustContentBg() {
+        if (!contentWrapper) return;
+        const app = document.getElementById('app');
+        if (!app) return;
+        // 让 content-wrapper 的高度跟随 #app 的实际内容高度
+        // CSS 已经用 min-height 处理，这里做微调确保背景贴合
+        const appHeight = app.scrollHeight;
+        contentWrapper.style.minHeight = (appHeight + 56) + 'px';
+    }
+
+    // 暴露给 docsify 插件
+    window.__adjustContentBg = adjustContentBg;
+
+    /* ============================================================
        侧边栏 — 菜单折叠 / 展开
        ============================================================ */
     function initTreeToggle() {
@@ -453,6 +471,8 @@
 
         // 初始高亮
         setTimeout(syncSidebar, 100);
+        // 初始背景高度调整
+        setTimeout(adjustContentBg, 200);
 
         // 窗口缩放
         window.addEventListener('resize', () => resizeCanvas());

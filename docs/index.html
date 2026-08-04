@@ -70,8 +70,13 @@
     <canvas id="gridCanvas" class="grid-canvas"></canvas>
     <canvas id="fireCanvas" class="fire-canvas"></canvas>
 
-    <!-- ========== docsify 挂载点 ========== -->
-    <div id="app"></div>
+    <!-- ========== 文档内容区（带半透明白色圆角矩形背景） ========== -->
+    <main class="content-wrapper" id="contentWrapper">
+        <!-- 半透明白色圆角矩形背景层 -->
+        <div class="content-bg"></div>
+        <!-- docsify 挂载点 -->
+        <div id="app"></div>
+    </main>
 
     <!-- ========== 脚本 ========== -->
     <script>
@@ -99,6 +104,10 @@
                         // 同步侧边栏高亮
                         if (window.__syncSidebar) {
                             window.__syncSidebar();
+                        }
+                        // 确保内容区背景高度跟随内容自适应
+                        if (window.__adjustContentBg) {
+                            window.__adjustContentBg();
                         }
                     });
                 }
