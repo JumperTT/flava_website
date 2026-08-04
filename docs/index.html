@@ -4,7 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Flava 文档</title>
-    <!-- 自定义样式（不加载 docsify vue.css，避免冲突） -->
+    <!-- docsify 主题样式 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@5/themes/vue.css" />
+    <!-- 自定义样式 -->
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -64,15 +66,15 @@
         </div>
     </aside>
 
-    <!-- ========== 背景画布 ========== -->
+    <!-- ========== 背景画布（来自主站） ========== -->
     <canvas id="gridCanvas" class="grid-canvas"></canvas>
     <canvas id="fireCanvas" class="fire-canvas"></canvas>
 
     <!--
         ========== 半透明白色圆角矩形背景 ==========
-        与 .content-wrapper 同级，都直接挂在 body 下，
-        都用 position: fixed 钉在视口上。
-        height: calc(100vh - 82px) → 永远紧贴底部 20px。
+        关键：和 .content-wrapper 同级，都直接挂在 body 下，
+        都用 position: fixed 钉在视口上。这样背景永远铺满
+        整个可视区域，不会因内容滚动而"断掉"。
     -->
     <div class="content-bg" id="contentBg"></div>
 
@@ -82,7 +84,9 @@
     </main>
 
     <!-- ========== 脚本 ========== -->
+    <!-- 1. 先加载我们的脚本，确保全局函数在 docsify 之前就绪 -->
     <script src="bg-animation.js"></script>
+    <!-- 2. 再加载 docsify -->
     <script>
         window.$docsify = {
             name: 'Flava 文档',
@@ -92,7 +96,7 @@
             loadNavbar: false,
             subMaxLevel: 3,
             maxLevel: 4,
-            auto2top: false,
+            auto2top: false,            // 关掉：滚动由我们自己的 fixed 容器管理
             search: {
                 placeholder: '🔍 搜索文档',
                 noData: '未找到结果'
@@ -100,8 +104,11 @@
             plugins: [
                 function (hook, vm) {
                     hook.doneEach(function () {
+                        // 1) 重绘背景动画尺寸
                         if (window.__resizeCanvas) window.__resizeCanvas();
+                        // 2) 同步侧边栏高亮
                         if (window.__syncSidebar) window.__syncSidebar();
+                        // 3) 滚动复位 + 搜索面板恢复
                         if (window.__onRouteChange) window.__onRouteChange();
                     });
                 }
@@ -109,6 +116,7 @@
         };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/docsify@5/lib/docsify.min.js"></script>
+    <!-- 搜索插件 -->
     <script src="https://cdn.jsdelivr.net/npm/docsify@5/lib/plugins/search.min.js"></script>
 </body>
 </html>

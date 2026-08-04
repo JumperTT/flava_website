@@ -1,9 +1,10 @@
 /* ============================================================
-   Flava Docs — 完整样式表
+   Flava Docs — 完整样式表（最终版）
    · 背景画布（fixed 全屏）
    · 顶部导航栏
    · 侧边栏（树形菜单）
    · 半透明白色圆角矩形背景（20% 透明度，离边缘 20px）
+     → 与 .content-wrapper 同级，fixed 钉视口，永不断层
    · 文档文字白色系 + 标题 rgb(190,200,255)
    · 表格全透明、无交替色
    · 搜索框深色主题
@@ -12,22 +13,19 @@
 /* ---------- Reset ---------- */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-html {
+html, body {
+    margin: 0 !important;
+    padding: 0 !important;
     width: 100%;
     height: 100%;
 }
 
 body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
     font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
     background: #000;
     color: #ffffff;
     overflow: hidden;          /* 防止 body 自己滚动；滚动交给 .content-wrapper */
     line-height: 1.6;
-    /* 关键：不能有 transform/filter/will-change，否则 fixed 会降级为 absolute */
 }
 
 a { color: rgb(190, 200, 255); text-decoration: none; }
@@ -35,10 +33,10 @@ a:hover { color: #ffffff; }
 
 /* ---------- 顶部导航栏 ---------- */
 .top-navbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
     height: 42px;
     background: rgba(20, 20, 28, 0.82);
     backdrop-filter: blur(10px);
@@ -49,6 +47,7 @@ a:hover { color: #ffffff; }
     padding-left: 16px;
     gap: 12px;
     border-bottom: 1px solid rgba(190, 200, 255, 0.2);
+    margin: 0 !important;
 }
 
 .menu-icon {
@@ -186,20 +185,17 @@ a:hover { color: #ffffff; }
 /* ============================================================
    核心：半透明白色圆角矩形背景
    - 与 .content-wrapper 同级，直接挂 body 下
-   - position: fixed → 永远钉在视口
-   - 用 top + height:calc() 代替 bottom，避免参照系歧义
-   - top: 62px (42px导航栏 + 20px间距)
-   - height: calc(100vh - 62px - 20px) = 视口高度 - 顶部62px - 底部20px
+   - position: fixed → 永远钉在视口，不随内容滚动
+   - top/left/right/bottom 全部固定 → 永远铺满可视区
    - z-index 5，在画布(0/1)之上、文字容器(10)之下
    ============================================================ */
 .content-bg {
     position: fixed;
     z-index: 5;
-    top: 62px;
+    top: 62px;          /* 42px 导航栏 + 20px 间距 */
     left: 20px;
     right: 20px;
-    /* 关键：用 height 代替 bottom，精确控制 */
-    height: calc(100vh - 82px);  /* 100vh - 62px(top) - 20px(bottom) */
+    bottom: 20px;
     background: rgba(255, 255, 255, 0.20);   /* 20% 白色 */
     border-radius: 20px;
     backdrop-filter: blur(6px);
@@ -229,8 +225,7 @@ a:hover { color: #ffffff; }
     top: 62px;
     left: 20px;
     right: 20px;
-    /* 和 .content-bg 一样的高度计算，确保对齐 */
-    height: calc(100vh - 82px);
+    bottom: 20px;
     overflow-y: auto;
     overflow-x: hidden;
     transition: left 0.3s ease;
@@ -240,9 +235,8 @@ a:hover { color: #ffffff; }
 #app {
     position: relative;
     z-index: 1;
-    padding: 36px 48px;
-    /* 确保内容区最小高度填满容器，背景不会在短文档时缩水 */
-    min-height: 100%;
+    /* 左右各 56px，让文字和白色矩形左/右边缘之间有明显间距 */
+    padding: 36px 56px 36px 56px;
 }
 
 /* ---------- Markdown 内容（白色系） ---------- */
@@ -302,7 +296,7 @@ a:hover { color: #ffffff; }
 
 /* 代码块 */
 .markdown-section pre {
-    background: rgba(20, 20, 28, 0.92);
+    background: rgba(20, 20, 28, 0.92) !important;
     border: 1px solid rgba(190, 200, 255, 0.2);
     border-radius: 10px;
     padding: 18px;
@@ -348,8 +342,9 @@ a:hover { color: #ffffff; }
     padding: 10px 14px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     color: #ffffff;
-    background: transparent;
+    background: transparent;   /* 强制透明，杜绝交替灰 */
 }
+/* 关键：覆盖任何可能的斑马纹 */
 .markdown-section tr:nth-child(even) td,
 .markdown-section tr:nth-child(odd) td {
     background: transparent;
@@ -379,10 +374,9 @@ a:hover { color: #ffffff; }
 }
 .markdown-section li { margin-bottom: 6px; color: #ffffff; }
 
-/* docsify 搜索框容器 */
+/* ---------- 搜索框（深色主题） ---------- */
 .search { margin-bottom: 24px; position: relative; }
 
-/* ---------- 搜索框（深色主题） ---------- */
 .search input {
     width: 100%;
     padding: 10px 16px;
@@ -402,34 +396,22 @@ a:hover { color: #ffffff; }
 
 /* 搜索结果面板 */
 .search .results-panel {
-    background: rgba(20, 20, 28, 0.95);
-    border: 1px solid rgba(190, 200, 255, 0.25);
+    background: rgba(20, 20, 28, 0.95) !important;
+    border: 1px solid rgba(190, 200, 255, 0.25) !important;
     border-radius: 8px;
     margin-top: 6px;
     overflow: hidden;
-    display: none;  /* 默认隐藏，由 JS 控制显示 */
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    max-height: 300px;
-    overflow-y: auto;
-}
-.search .results-panel.show {
-    display: block;  /* JS 添加 .show 类来显示 */
 }
 .search .results-panel a {
-    color: #ffffff;
+    color: #ffffff !important;
     padding: 10px 16px;
     display: block;
     border-bottom: 1px solid rgba(255,255,255,0.06);
     font-size: 0.88rem;
-    text-decoration: none;
 }
 .search .results-panel a:hover {
-    background: rgba(190, 200, 255, 0.12);
-    color: rgb(190, 200, 255);
+    background: rgba(190, 200, 255, 0.12) !important;
+    color: rgb(190, 200, 255) !important;
 }
 .search .results-panel a:last-child { border-bottom: none; }
 .search .results-panel .empty {
@@ -445,10 +427,10 @@ a:hover { color: #ffffff; }
         top: 56px;
         left: 12px;
         right: 12px;
-        height: calc(100vh - 68px);  /* 100vh - 56px - 12px */
+        bottom: 12px;
         border-radius: 14px;
     }
-    #app { padding: 24px 18px; }
+    #app { padding: 24px 20px; }
     .markdown-section h1 { font-size: 1.6rem; }
     .markdown-section h2 { font-size: 1.25rem; }
 }
@@ -467,3 +449,4 @@ a:hover { color: #ffffff; }
 
 /* ---------- 隐藏 docsify 自带侧边栏开关 ---------- */
 .sidebar-toggle { display: none !important; }
+body { padding-top: 0 !important; }

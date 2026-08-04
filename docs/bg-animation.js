@@ -1,10 +1,10 @@
 /* ============================================================
-   bg-animation.js
+   bg-animation.js（最终版）
    1. 背景动画：白色旋转网格 + 火焰光晕 + 漂浮粒子
    2. 侧边栏交互：树形折叠 / 展开 / 路由跳转
    3. 与 docsify 联动
    4. 返回主页 → 随机小写英文字母子域名.flava.woen.pics
-   5. 搜索结果点击后清空搜索框 + 搜索结果显示/隐藏
+   5. 搜索结果点击后清空搜索框
    6. 路由切换复位滚动位置
    ============================================================ */
 
@@ -14,15 +14,15 @@
     /* ============================================================
        DOM 引用
        ============================================================ */
-    const fireCanvas     = document.getElementById('fireCanvas');
-    const gridCanvas     = document.getElementById('gridCanvas');
-    const fireCtx        = fireCanvas.getContext('2d');
-    const gridCtx        = gridCanvas.getContext('2d');
-    const sidebar        = document.getElementById('sidebar');
-    const menuIcon       = document.getElementById('menuIcon');
-    const homeBtn        = document.getElementById('homeBtn');
-    const contentWrapper = document.getElementById('contentWrapper');
-    const contentBg      = document.getElementById('contentBg');
+    const fireCanvas    = document.getElementById('fireCanvas');
+    const gridCanvas    = document.getElementById('gridCanvas');
+    const fireCtx       = fireCanvas.getContext('2d');
+    const gridCtx       = gridCanvas.getContext('2d');
+    const sidebar       = document.getElementById('sidebar');
+    const menuIcon      = document.getElementById('menuIcon');
+    const homeBtn       = document.getElementById('homeBtn');
+    const contentWrapper= document.getElementById('contentWrapper');
+    const contentBg     = document.getElementById('contentBg');
 
     /* ============================================================
        背景动画 — 数据
@@ -234,32 +234,10 @@
 
     function animate() { drawFire(); requestAnimationFrame(animate); }
 
-    /* ============================================================
-       同步白色背景高度 —— 关键函数
-       用 getBoundingClientRect 精确测量视口，
-       确保 .content-bg 永远紧贴底部。
-       ============================================================ */
-    function syncBackgroundHeight() {
-        if (!contentBg) return;
-        // 视口高度 - 顶部62px - 底部20px = 背景可用高度
-        const vh = window.innerHeight;
-        const topOffset = 62;
-        const bottomOffset = 20;
-        const bgHeight = vh - topOffset - bottomOffset;
-        contentBg.style.height = bgHeight + 'px';
-
-        // content-wrapper 同步高度
-        if (contentWrapper) {
-            contentWrapper.style.height = bgHeight + 'px';
-        }
-    }
-
     function resizeCanvas() {
         fireCanvas.width = window.innerWidth;  fireCanvas.height = window.innerHeight;
         gridCanvas.width = window.innerWidth;  gridCanvas.height = window.innerHeight;
         initFirePoints(); initBackgroundGlows(); initParticles(); drawGrid();
-        // 画布 resize 后同步背景高度
-        syncBackgroundHeight();
     }
     window.__resizeCanvas = resizeCanvas;
 
@@ -270,21 +248,18 @@
        - 重新同步侧边栏高亮
        ============================================================ */
     function onRouteChange() {
+        // 双重 rAF：确保 docsify 渲染完成后再复位
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
                 if (contentWrapper) contentWrapper.scrollTop = 0;
-                // 路由切换后重新同步背景高度（防止视口变化）
-                syncBackgroundHeight();
             });
         });
-        // 清空搜索框 + 隐藏结果面板
+        // 清空搜索框
         const sInput = document.querySelector('.search input');
         if (sInput) {
             sInput.value = '';
             sInput.dispatchEvent(new Event('input', { bubbles: true }));
         }
-        const panel = document.querySelector('.search .results-panel');
-        if (panel) panel.classList.remove('show');
         // 同步侧边栏
         if (window.__syncSidebar) window.__syncSidebar();
     }
@@ -338,7 +313,7 @@
        ============================================================ */
     function getRandomSubdomain() {
         const chars = 'abcdefghijklmnopqrstuvwxyz';
-        const len = Math.floor(Math.random() * 8) + 3;
+        const len = Math.floor(Math.random() * 8) + 3; // 3~10 位
         let s = '';
         for (let i = 0; i < len; i++) s += chars[Math.floor(Math.random() * chars.length)];
         return s;
@@ -361,57 +336,37 @@
     }
 
     /* ============================================================
-       搜索功能完整管理
-       1. 监听 input 事件 → 有内容显示面板，无内容隐藏
-       2. 点击搜索结果 → 跳转 + 清空 + 隐藏面板
-       3. 点击页面其他区域 → 隐藏面板
+       搜索结果 — 点击后清空搜索框
+       使用事件委托 + MutationObserver 双保险，
+       确保 docsify 搜索插件渲染出结果面板后能正确响应。
        ============================================================ */
-    function initSearch() {
-        const searchContainer = document.querySelector('.search');
-        const input = searchContainer ? searchContainer.querySelector('input') : null;
-        const panel = searchContainer ? searchContainer.querySelector('.results-panel') : null;
-
-        if (!input || !panel) return;
-
-        // 1) input 事件：有内容显示面板，无内容隐藏
-        input.addEventListener('input', () => {
-            if (input.value.trim() === '') {
-                panel.classList.remove('show');
-            } else {
-                // 给 docsify 搜索插件一点时间渲染结果
-                setTimeout(() => {
-                    if (panel.children.length > 0) {
-                        panel.classList.add('show');
-                    }
-                }, 50);
-            }
-        });
-
-        // 2) focus 时如果有内容也显示
-        input.addEventListener('focus', () => {
-            if (input.value.trim() !== '' && panel.children.length > 0) {
-                panel.classList.add('show');
-            }
-        });
-
-        // 3) 点击搜索结果 → 跳转后清空并隐藏
+    function initSearchClear() {
+        // 1) 事件委托：点击任何搜索结果链接 → 清空
         document.addEventListener('click', e => {
-            const link = e.target.closest('.search .results-panel a');
-            if (!link) return;
-            // 等 docsify 处理完路由跳转
+            const a = e.target.closest('.search .results-panel a');
+            if (!a) return;
+            // 等 docsify 处理完跳转后再清空
             setTimeout(() => {
-                input.value = '';
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-                panel.classList.remove('show');
-            }, 150);
+                const input = document.querySelector('.search input');
+                if (input) {
+                    input.value = '';
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }, 120);
         });
 
-        // 4) 点击页面其他区域 → 隐藏面板
-        document.addEventListener('click', e => {
-            if (!e.target.closest('.search')) {
-                panel.classList.remove('show');
-            }
-        });
+        // 2) MutationObserver：监听结果面板的显示，
+        //    当它被 docsify 搜索插件添加/显示时，确保样式正确
+        const panel = document.querySelector('.search .results-panel');
+        if (panel && 'MutationObserver' in window) {
+            const obs = new MutationObserver(() => {
+                // 只要面板里有内容，就强制可见（防止被旧 CSS 隐藏）
+                if (panel.children.length > 0) {
+                    panel.style.display = '';
+                }
+            });
+            obs.observe(panel, { childList: true, subtree: true, attributes: true });
+        }
     }
 
     /* ============================================================
@@ -423,23 +378,15 @@
         initSidebarControls();
         initTreeToggle();
         initTreeNavigation();
-        initSearch();
+        initSearchClear();
 
         setTimeout(syncSidebar, 100);
 
-        // resize 时同步背景高度
-        window.addEventListener('resize', () => {
-            resizeCanvas();
-            syncBackgroundHeight();
-        });
-
+        window.addEventListener('resize', () => resizeCanvas());
         window.addEventListener('hashchange', () => {
             syncSidebar();
             onRouteChange();
         });
-
-        // 初始同步一次背景高度
-        syncBackgroundHeight();
     }
 
     if (document.readyState === 'loading') {
