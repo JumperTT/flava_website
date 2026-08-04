@@ -217,7 +217,7 @@ a:hover { color: #ffffff; }
     position: fixed;
     z-index: 10;
     top: 67px;           /* bg top 62 + 5px 间距 */
-    left: 25px;          /* bg left 20 + 5px 间距 */
+    left: 38px;          /* bg left 20 + 5px 间距 */
     right: 25px;         /* bg right 20 + 5px 间距 */
     bottom: 25px;        /* bg bottom 20 + 5px 间距 */
     overflow-y: auto;
