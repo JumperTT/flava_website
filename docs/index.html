@@ -73,26 +73,23 @@
     <!-- ========== 文档内容区（带半透明白色圆角矩形背景） ========== -->
     <main class="content-wrapper" id="contentWrapper">
         <!-- 半透明白色圆角矩形背景层 -->
-        <div class="content-bg"></div>
+        <div class="content-bg" id="contentBg"></div>
         <!-- docsify 挂载点 -->
         <div id="app"></div>
     </main>
 
     <!-- ========== 脚本 ========== -->
     <script>
-        // docsify 配置
-        // ⚠️ auto2top 必须关掉：它会调用 window.scrollTo(0,0)，
-        //    和我们 fixed 布局的 content-wrapper 内部滚动冲突，
-        //    导致"打开文档要下滑才看得见"。
+        // docsify 配置 —— 关闭自带侧边栏，由我们自定义
         window.$docsify = {
             name: 'Flava 文档',
             repo: '',
             homepage: 'README.md',
-            loadSidebar: false,
+            loadSidebar: false,         // 关闭 docsify 默认侧边栏
             loadNavbar: false,
             subMaxLevel: 3,
             maxLevel: 4,
-            auto2top: false,           // ← 关键：关闭 window 滚动
+            auto2top: false,            // 关闭！我们的滚动容器是 fixed，window 不滚动
             search: {
                 placeholder: '🔍 搜索文档',
                 noData: '未找到结果'
@@ -100,15 +97,15 @@
             plugins: [
                 function (hook, vm) {
                     hook.doneEach(function () {
-                        // 1) 重绘背景画布
+                        // 路由切换后重绘背景
                         if (window.__resizeCanvas) {
                             window.__resizeCanvas();
                         }
-                        // 2) 同步侧边栏高亮
+                        // 同步侧边栏高亮
                         if (window.__syncSidebar) {
                             window.__syncSidebar();
                         }
-                        // 3) 复位滚动位置 + 校准背景高度
+                        // 确保内容区背景高度跟随内容自适应 + 滚动复位
                         if (window.__adjustContentBg) {
                             window.__adjustContentBg();
                         }
@@ -118,7 +115,9 @@
         };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/docsify@5/lib/docsify.min.js"></script>
+    <!-- 搜索插件 -->
     <script src="https://cdn.jsdelivr.net/npm/docsify@5/lib/plugins/search.min.js"></script>
+    <!-- 背景动画 + 侧边栏交互 -->
     <script src="bg-animation.js"></script>
 </body>
 </html>

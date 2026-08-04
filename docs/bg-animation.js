@@ -5,7 +5,7 @@
       （从主站 index.html 移植）
    2. 侧边栏交互：树形折叠 / 展开 / 路由跳转
    3. 与 docsify 联动：点击侧边栏 → 修改 hash → docsify 加载对应 .md
-   4. 内容区半透明白色背景高度自适应（始终覆盖全部文字）
+   4. 内容区半透明白色背景高度自适应（关键修复）
    ============================================================ */
 
 (function () {
@@ -22,7 +22,7 @@
     const menuIcon = document.getElementById('menuIcon');
     const homeBtn = document.getElementById('homeBtn');
     const contentWrapper = document.getElementById('contentWrapper');
-    const contentBg = document.querySelector('.content-bg');
+    const contentBg = document.getElementById('contentBg');
     const app = document.getElementById('app');
 
     /* ============================================================
@@ -216,8 +216,8 @@
             if (p.offsetY < p.baseOffsetY - 15) p.velocityOffsetY += 0.1;
             if (p.offsetX > p.baseOffsetX + 10) p.velocityOffsetX -= 0.05;
             if (p.offsetX < p.baseOffsetX - 10) p.velocityOffsetX += 0.05;
-            p.velocityOffsetY = Math.max(p.minVelocityOffset, Math.min(p.maxVelocityOffset, p.velocityOffsetY));
-            p.velocityOffsetX = Math.max(p.minVelocityOffset, Math.min(p.minVelocityOffset, p.velocityOffsetX));
+            p.velocityOffsetY = Math.max(p.maxVelocityOffset, Math.min(p.maxVelocityOffset, p.velocityOffsetY));
+            p.velocityOffsetX = Math.max(p.maxVelocityOffset, Math.min(p.maxVelocityOffset, p.velocityOffsetX));
             p.velocityOffsetY *= 0.98;
             p.velocityOffsetX *= 0.98;
         });
@@ -291,6 +291,7 @@
     function drawFire() {
         fireCtx.clearRect(0, 0, fireCanvas.width, fireCanvas.height);
 
+        // 光晕
         backgroundGlows.forEach(g => {
             const grad = fireCtx.createRadialGradient(g.x, g.y, 0, g.x, g.y, g.radius);
             grad.addColorStop(0, g.color);
@@ -374,50 +375,37 @@
     window.__resizeCanvas = resizeCanvas;
 
     /* ============================================================
-       内容区背景 — 高度自适应 + 滚动复位
+       内容区背景 — 核心修复
        ============================================================
-       问题回顾：
-       - 打开文档要下滑才看得见 → docsify auto2top 把 window 滚到顶部，
-         但我们的滚动容器是 content-wrapper，必须在渲染后手动复位它。
-       - 右侧没有间隙 → content-bg 用 sticky + 100% 宽度，
-         并强制 height = max(内容高度, 可视高度)。
-       ============================================================ */
-    function syncBgHeight() {
-        if (!contentBg || !contentWrapper || !app) return;
-        const wrapperH = contentWrapper.clientHeight;
-        const contentH = app.scrollHeight;
-        const target = Math.max(wrapperH, contentH);
-        contentBg.style.height = target + 'px';
-    }
+       问题：.content-bg 是 absolute 定位，高度只等于 wrapper 可视高度。
+       当文档内容超出可视区需要滚动时，滚下去的部分没有背景。
 
+       解决：用 ResizeObserver 监听 #app 的内容高度变化，
+       动态把 .content-bg 的高度设为 max(内容高度, 可视高度)，
+       确保背景始终覆盖所有内容 + 可视区域。
+    */
     function adjustContentBg() {
-        if (!contentWrapper) return;
+        if (!contentWrapper || !contentBg || !app) return;
 
-        // ① 等一帧再复位滚动 —— 必须晚于 docsify 的 auto2top
+        // 计算所需高度：内容高度和可视高度取最大值
+        const contentHeight = app.scrollHeight;
+        const viewportHeight = contentWrapper.clientHeight;
+        const neededHeight = Math.max(contentHeight, viewportHeight);
+
+        // 设置背景高度
+        contentBg.style.height = neededHeight + 'px';
+
+        // 路由切换后复位滚动位置到顶部
+        // 用双重 rAF 确保在 docsify 渲染完成后再执行
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
                 contentWrapper.scrollTop = 0;
             });
         });
-
-        // ② 校准背景高度（立即 + 延时双次，覆盖图片/代码高亮等异步渲染）
-        syncBgHeight();
-        setTimeout(syncBgHeight, 100);
-        setTimeout(syncBgHeight, 500);
     }
 
     // 暴露给 docsify 插件
     window.__adjustContentBg = adjustContentBg;
-
-    // ③ ResizeObserver：内容高度变化时自动重算
-    let _bgObserver = null;
-    function initBgObserver() {
-        if (_bgObserver || !window.ResizeObserver || !app || !contentBg) return;
-        _bgObserver = new ResizeObserver(() => syncBgHeight());
-        _bgObserver.observe(app);
-        // 窗口尺寸变化也重算
-        window.addEventListener('resize', syncBgHeight);
-    }
 
     /* ============================================================
        侧边栏 — 菜单折叠 / 展开
@@ -437,7 +425,9 @@
         document.querySelectorAll('.tree-item[data-route]').forEach(item => {
             item.addEventListener('click', () => {
                 const route = item.dataset.route;
+                // 修改 hash，docsify 会拦截并加载对应的 .md 文件
                 location.hash = '#/' + route;
+                // 收起侧边栏（移动端体验）
                 if (window.innerWidth < 768) {
                     sidebar.classList.remove('active');
                     document.body.classList.remove('sidebar-open');
@@ -458,6 +448,7 @@
                 item.classList.add('active');
             } else if (hash && route === hash) {
                 item.classList.add('active');
+                // 自动展开父级
                 const parent = item.closest('.tree-children');
                 if (parent) parent.parentElement.classList.add('open');
             }
@@ -496,14 +487,34 @@
         initSidebarControls();
         initTreeToggle();
         initTreeNavigation();
-        initBgObserver();   // 启动背景高度监听
 
-        // 初始高亮 & 背景校准
+        // 初始高亮
         setTimeout(syncSidebar, 100);
-        setTimeout(adjustContentBg, 200);
 
-        window.addEventListener('resize', () => resizeCanvas());
-        window.addEventListener('hashchange', syncSidebar);
+        // 初始背景高度调整（延迟确保 DOM 渲染完成）
+        setTimeout(adjustContentBg, 300);
+
+        // 窗口缩放 → 重绘背景 + 重新计算背景高度
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            adjustContentBg();
+        });
+
+        // hash 变化 → 同步高亮 + 重新计算背景
+        window.addEventListener('hashchange', () => {
+            syncSidebar();
+            // 延迟等待 docsify 渲染新内容
+            setTimeout(adjustContentBg, 100);
+        });
+
+        // 关键：用 ResizeObserver 监听内容区域高度变化
+        // 当 docsify 加载新文档后，#app 的高度会变化，自动触发背景高度更新
+        if (window.ResizeObserver) {
+            const ro = new ResizeObserver(() => {
+                adjustContentBg();
+            });
+            ro.observe(app);
+        }
     }
 
     if (document.readyState === 'loading') {

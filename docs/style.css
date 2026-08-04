@@ -4,7 +4,7 @@
    · 顶部导航栏
    · 侧边栏（树形菜单）
    · 文档正文半透明白色圆角矩形背景（20% 透明度，离边缘 20px）
-   · 文字配色提亮
+   · 文字配色：白色系（在半透明白底上清晰可读）
    · 响应式
    ============================================================ */
 
@@ -21,13 +21,13 @@ html, body {
 body {
     font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
     background: #000;
-    color: #e0e0e0;
-    overflow: hidden;          /* 整页禁止滚动，滚动交给 content-wrapper */
+    color: #ffffff;
+    overflow: hidden;          /* 防止 body 滚动，只让 content-wrapper 内部滚动 */
     line-height: 1.6;
 }
 
-a { color: #ff8c42; text-decoration: none; }
-a:hover { color: #ff4500; }
+a { color: #ffb380; text-decoration: none; }
+a:hover { color: #ffd9b3; }
 
 /* ---------- 顶部导航栏 ---------- */
 .top-navbar {
@@ -95,11 +95,11 @@ a:hover { color: #ff4500; }
 
 .back-button {
     display: inline-block;
-    color: #ff8c42;
+    color: #ffb380;
     font-size: 0.85rem;
     transition: color 0.2s;
 }
-.back-button:hover { color: #ff4500; }
+.back-button:hover { color: #ffd9b3; }
 
 .sidebar-body {
     flex: 1;
@@ -107,6 +107,7 @@ a:hover { color: #ff4500; }
     padding: 12px 8px 20px;
 }
 
+/* 滚动条 */
 .sidebar-body::-webkit-scrollbar { width: 4px; }
 .sidebar-body::-webkit-scrollbar-thumb { background: rgba(255,69,0,0.2); border-radius: 2px; }
 
@@ -119,6 +120,7 @@ a:hover { color: #ff4500; }
     margin-bottom: 8px;
 }
 
+/* 树形列表 */
 .tree-list { list-style: none; }
 .tree-list li { margin: 1px 0; }
 
@@ -126,7 +128,7 @@ a:hover { color: #ff4500; }
 .tree-list [data-route] {
     display: block;
     padding: 7px 12px;
-    color: rgba(255,255,255,0.65);
+    color: rgba(255,255,255,0.70);
     font-size: 0.88rem;
     cursor: pointer;
     border-radius: 6px;
@@ -136,16 +138,17 @@ a:hover { color: #ff4500; }
 
 .tree-list .tree-label:hover,
 .tree-list [data-route]:hover {
-    color: #ff8c42;
-    background: rgba(255, 69, 0, 0.08);
+    color: #ffb380;
+    background: rgba(255, 69, 0, 0.10);
 }
 
 .tree-list [data-route].active {
-    color: #ff4500;
-    background: rgba(255, 69, 0, 0.12);
+    color: #ffd9b3;
+    background: rgba(255, 69, 0, 0.15);
     font-weight: 600;
 }
 
+/* 父级箭头 */
 .tree-item.has-children > .tree-label::before {
     content: '▸ ';
     display: inline-block;
@@ -156,9 +159,10 @@ a:hover { color: #ff4500; }
 
 .tree-item.has-children.open > .tree-label::before {
     content: '▾ ';
-    color: #ff8c42;
+    color: #ffb380;
 }
 
+/* 子菜单 */
 .tree-children {
     list-style: none;
     padding-left: 16px;
@@ -190,25 +194,24 @@ a:hover { color: #ff4500; }
 
 /* ---------- 文档内容区包裹层 ----------
    离网页边缘 20px：
-   - 顶部：导航栏高 42px + 20px 间距 = 62px
+   - 顶部：导航栏高 42px，再留 20px 间距 → top: 62px
    - 左右下：各 20px
-   - 整页不滚动，内部滚动
 */
 .content-wrapper {
     position: fixed;
     z-index: 10;
-    top: 62px;
+    top: 62px;          /* 42px 导航栏 + 20px 间距 */
     left: 20px;
     right: 20px;
     bottom: 20px;
-    overflow-y: auto;        /* 内部滚动 */
+    overflow-y: auto;
     overflow-x: hidden;
     transition: left 0.3s ease, right 0.3s ease;
-    /* 关键：让内部 sticky 元素相对此容器定位 */
-    contain: strict;
+    /* 关键：让内部绝对定位的子元素（content-bg）相对此容器定位 */
+    isolation: isolate;
 }
 
-/* 侧边栏打开时左侧让出 240px */
+/* 侧边栏打开时内容区右移（仅桌面端）—— 左侧再让出 240px */
 @media (min-width: 769px) {
     body.sidebar-open .content-wrapper {
         left: calc(20px + 240px);
@@ -216,26 +219,27 @@ a:hover { color: #ff4500; }
 }
 
 /* ---------- 半透明白色圆角矩形背景（20% 透明度） ----------
-   使用 sticky + 100% 宽度，确保：
-   1) 始终填满 content-wrapper 的可视宽度 → 左右各留 20px（来自 wrapper 的 left/right）
-   2) 高度随内容增长，不会在长文档底部断掉
-   3) 滚动时始终可见
+   关键改动：
+   - position: absolute + top/left/right/bottom: 0 → 铺满整个 content-wrapper
+   - 当内容超出可视区时，JS 会动态把高度设为 scrollHeight
+   - 这样滚动时背景始终跟随内容
 */
 .content-bg {
-    position: sticky;
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     min-height: 100%;
-    background: rgba(255, 255, 255, 0.20);
+    background: rgba(255, 255, 255, 0.20);   /* 20% 白色 */
     border-radius: 20px;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    z-index: 0;             /* 在文字下方 */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    z-index: 0;
     pointer-events: none;
-    flex-shrink: 0;
+    /* 确保圆角裁剪内部内容 */
+    overflow: hidden;
 }
 
 /* ---------- docsify 内容区 ---------- */
@@ -246,9 +250,9 @@ a:hover { color: #ff4500; }
     min-height: 100%;
 }
 
-/* ---------- Markdown 内容（深色文字，高对比度） ---------- */
+/* ---------- Markdown 内容（白色系文字） ---------- */
 .markdown-section {
-    color: #1a1a1a;          /* 比 #2a2a2a 更深，更清晰 */
+    color: #ffffff;
     line-height: 1.85;
 }
 
@@ -256,59 +260,70 @@ a:hover { color: #ff4500; }
 .markdown-section h2,
 .markdown-section h3,
 .markdown-section h4 {
-    color: #c04000;          /* 更鲜艳的深橙红 */
+    color: #ffffff;
     margin-top: 28px;
     margin-bottom: 14px;
-    font-weight: 700;        /* 加粗 */
+    font-weight: 700;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .markdown-section h1 {
     font-size: 2rem;
-    border-bottom: 2px solid rgba(255, 69, 0, 0.3);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.35);
     padding-bottom: 10px;
-    text-shadow: 0 0 16px rgba(255, 69, 0, 0.15);
+    text-shadow: 0 0 16px rgba(255, 200, 150, 0.3);
 }
 
 .markdown-section h2 {
     font-size: 1.45rem;
-    border-bottom: 1px solid rgba(255, 69, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.25);
     padding-bottom: 6px;
 }
 
-.markdown-section h3 { font-size: 1.15rem; }
-.markdown-section h4 { font-size: 1rem; color: #d06020; }
+.markdown-section h3 {
+    font-size: 1.15rem;
+    color: #fff5eb;
+}
 
-.markdown-section p { margin-bottom: 14px; color: #1a1a1a; }
+.markdown-section h4 {
+    font-size: 1rem;
+    color: #ffe0c0;
+}
+
+.markdown-section p {
+    margin-bottom: 14px;
+    color: #f5f5f5;
+}
 
 .markdown-section a {
-    color: #c04000;
-    font-weight: 500;
-    border-bottom: 1px dashed rgba(192, 64, 0, 0.4);
+    color: #ffb380;
+    border-bottom: 1px dashed rgba(255, 179, 128, 0.6);
     transition: all 0.2s;
+    font-weight: 500;
 }
 .markdown-section a:hover {
-    color: #ff4500;
-    border-bottom-color: #ff4500;
+    color: #ffd9b3;
+    border-bottom-color: #ffd9b3;
 }
 
 .markdown-section code {
-    background: rgba(255, 69, 0, 0.12);
-    color: #b03000;
-    font-weight: 600;
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
     padding: 2px 6px;
     border-radius: 4px;
     font-size: 0.88em;
     font-family: 'Fira Code', 'Consolas', monospace;
+    font-weight: 600;
 }
 
 .markdown-section pre {
-    background: rgba(30, 30, 30, 0.92) !important;
-    border: 1px solid rgba(255, 69, 0, 0.2);
+    background: rgba(20, 20, 20, 0.92) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 10px;
     padding: 18px;
     overflow-x: auto;
     margin: 16px 0;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .markdown-section pre code {
@@ -316,17 +331,17 @@ a:hover { color: #ff4500; }
     color: #e8e8e8;
     padding: 0;
     font-size: 0.85rem;
-    line-height: 1.7;
     font-weight: 400;
+    line-height: 1.7;
 }
 
 .markdown-section blockquote {
-    border-left: 4px solid #ff4500;
-    background: rgba(255, 69, 0, 0.06);
+    border-left: 4px solid #ffb380;
+    background: rgba(255, 255, 255, 0.10);
     padding: 12px 18px;
     margin: 16px 0;
     border-radius: 0 8px 8px 0;
-    color: #2a2a2a;
+    color: #f0f0f0;
 }
 
 .markdown-section table {
@@ -337,49 +352,59 @@ a:hover { color: #ff4500; }
 }
 
 .markdown-section th {
-    background: rgba(255, 69, 0, 0.15);
-    color: #a03000;
+    background: rgba(255, 255, 255, 0.20);
+    color: #ffffff;
     padding: 10px 14px;
     text-align: left;
-    border: 1px solid rgba(255, 69, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     font-weight: 700;
 }
 
 .markdown-section td {
     padding: 10px 14px;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    color: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #f5f5f5;
 }
 
 .markdown-section tr:nth-child(even) td {
-    background: rgba(0, 0, 0, 0.03);
+    background: rgba(255, 255, 255, 0.06);
 }
 
 .markdown-section tr:hover td {
-    background: rgba(255, 69, 0, 0.05);
+    background: rgba(255, 179, 128, 0.10);
 }
 
 .markdown-section hr {
     border: none;
-    border-top: 1px solid rgba(255, 69, 0, 0.25);
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
     margin: 28px 0;
 }
 
 .markdown-section img {
     max-width: 100%;
     border-radius: 8px;
-    border: 1px solid rgba(255, 69, 0, 0.2);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .markdown-section ul,
 .markdown-section ol {
     padding-left: 1.5em;
     margin-bottom: 14px;
-    color: #1a1a1a;
+    color: #f5f5f5;
 }
 
 .markdown-section li { margin-bottom: 6px; }
+
+.markdown-section strong {
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.markdown-section em {
+    color: #fff0e0;
+    font-style: italic;
+}
 
 /* ---------- docsify 搜索框 ---------- */
 .search {
@@ -390,29 +415,29 @@ a:hover { color: #ff4500; }
     width: 100%;
     padding: 10px 16px;
     background: rgba(255, 255, 255, 0.85);
-    border: 1px solid rgba(255, 69, 0, 0.3);
+    border: 1px solid rgba(255, 179, 128, 0.5);
     border-radius: 8px;
-    color: #1a1a1a;
+    color: #333;
     font-size: 0.9rem;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .search input:focus {
-    border-color: #ff4500;
-    box-shadow: 0 0 12px rgba(255, 69, 0, 0.3);
+    border-color: #ff8c42;
+    box-shadow: 0 0 12px rgba(255, 140, 66, 0.4);
 }
 
 .search .results-panel {
     background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(255, 69, 0, 0.2);
+    border: 1px solid rgba(255, 179, 128, 0.3);
     border-radius: 8px;
     margin-top: 6px;
     overflow: hidden;
 }
 
 .search .results-panel a {
-    color: #1a1a1a;
+    color: #333;
     padding: 10px 16px;
     display: block;
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
@@ -420,7 +445,7 @@ a:hover { color: #ff4500; }
 }
 
 .search .results-panel a:hover {
-    background: rgba(255, 69, 0, 0.08);
+    background: rgba(255, 179, 128, 0.15);
     color: #c04000;
 }
 
@@ -429,7 +454,7 @@ a:hover { color: #ff4500; }
 /* ---------- 响应式 ---------- */
 @media (max-width: 768px) {
     .content-wrapper {
-        top: 56px;       /* 42px + 14px */
+        top: 56px;       /* 42px + 14px 间距 */
         left: 20px;
         right: 20px;
         bottom: 20px;
@@ -448,23 +473,31 @@ a:hover { color: #ff4500; }
     .markdown-section h2 { font-size: 1.25rem; }
 }
 
-/* ---------- 滚动条美化（针对 content-wrapper） ---------- */
+/* ---------- 滚动条美化 ---------- */
 .content-wrapper::-webkit-scrollbar { width: 8px; height: 8px; }
-.content-wrapper::-webkit-scrollbar-track { background: rgba(0,0,0,0.15); border-radius: 4px; }
+.content-wrapper::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
 .content-wrapper::-webkit-scrollbar-thumb {
-    background: rgba(255, 69, 0, 0.3);
+    background: rgba(255, 255, 255, 0.25);
     border-radius: 4px;
 }
-.content-wrapper::-webkit-scrollbar-thumb:hover { background: rgba(255, 69, 0, 0.5); }
+.content-wrapper::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.40); }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 69, 0, 0.25);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 69, 0, 0.45); }
 
 /* ---------- 加载提示 ---------- */
 #app > p:first-child {
-    color: rgba(0,0,0,0.4);
+    color: rgba(255,255,255,0.5);
     font-size: 0.9rem;
 }
 
 /* ---------- 隐藏 docsify 自带的左下角侧边栏开关按钮 ---------- */
 .sidebar-toggle { display: none !important; }
 
-/* ---------- 防止 docsify 主题给 body 加 padding ---------- */
+/* ---------- 防止 docsify 主题给 body 加 padding 导致导航栏不贴顶 ---------- */
 body { padding-top: 0 !important; }
