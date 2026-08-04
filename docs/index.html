@@ -23,7 +23,7 @@
     <!-- ========== 侧边栏（自定义，docsify 不接管） ========== -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <a href="https://flava.woen.pics" class="back-button" id="homeBtn" target="_self">← 返回主页</a>
+            <a href="https://flava.woen.pics" class="back-button" id="homeBtn">← 返回主页</a>
         </div>
         <div class="sidebar-body">
             <div class="tree-title">文档列表</div>
@@ -66,33 +66,33 @@
         </div>
     </aside>
 
-    <!-- ========== 背景画布 ========== -->
+    <!-- ========== 背景画布（来自主站） ========== -->
     <canvas id="gridCanvas" class="grid-canvas"></canvas>
     <canvas id="fireCanvas" class="fire-canvas"></canvas>
 
-    <!-- ========== 半透明白色圆角矩形背景（fixed 钉在视口上） ========== -->
+    <!-- ========== 半透明白色圆角矩形背景（fixed 钉视口，与滚动层同级） ========== -->
     <div class="content-bg" id="contentBg"></div>
 
-    <!-- ========== 文档内容区 ========== -->
+    <!-- ========== 文档内容区（fixed 钉视口，内部滚动） ========== -->
     <main class="content-wrapper" id="contentWrapper">
         <!-- docsify 挂载点 -->
         <div id="app"></div>
     </main>
 
     <!-- ========== 脚本 ========== -->
-    <!-- 背景动画 + 侧边栏交互（先于 docsify 加载，确保全局函数就绪） -->
+    <!-- 背景动画 + 侧边栏交互（必须在 docsify 之前加载，确保全局函数先就绪） -->
     <script src="bg-animation.js"></script>
     <script>
-        // docsify 配置
+        // docsify 配置 —— 关闭自带侧边栏，由我们自定义
         window.$docsify = {
             name: 'Flava 文档',
             repo: '',
             homepage: 'README.md',
-            loadSidebar: false,
+            loadSidebar: false,         // 关闭 docsify 默认侧边栏
             loadNavbar: false,
             subMaxLevel: 3,
             maxLevel: 4,
-            auto2top: false,        // 关闭，由我们自己控制滚动
+            auto2top: false,           // 关闭：滚动由 contentWrapper 管理
             search: {
                 placeholder: '🔍 搜索文档',
                 noData: '未找到结果'
@@ -100,7 +100,7 @@
             plugins: [
                 function (hook, vm) {
                     hook.doneEach(function () {
-                        // 重绘背景动画
+                        // 路由切换后重绘背景
                         if (window.__resizeCanvas) {
                             window.__resizeCanvas();
                         }
@@ -108,9 +108,9 @@
                         if (window.__syncSidebar) {
                             window.__syncSidebar();
                         }
-                        // 路由切换后复位滚动 + 调整背景
-                        if (window.__onRouteChange) {
-                            window.__onRouteChange();
+                        // 确保内容区复位到顶部
+                        if (window.__adjustContentBg) {
+                            window.__adjustContentBg();
                         }
                     });
                 }

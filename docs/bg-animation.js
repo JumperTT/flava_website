@@ -4,8 +4,8 @@
    1. 背景动画：白色旋转网格 + 火焰光晕 + 漂浮粒子
    2. 侧边栏交互：树形折叠 / 展开 / 路由跳转
    3. 与 docsify 联动：点击侧边栏 → 修改 hash → docsify 加载对应 .md
-   4. 路由切换后滚动复位 + 搜索框自动清空
-   5. 返回主页按钮 → 跳转随机子域名.flava.woen.pics
+   4. 返回主页 → 随机小写英文字母子域名.flava.woen.pics
+   5. 搜索结果点击后清空搜索框
    ============================================================ */
 
 (function () {
@@ -22,6 +22,7 @@
     const menuIcon = document.getElementById('menuIcon');
     const homeBtn = document.getElementById('homeBtn');
     const contentWrapper = document.getElementById('contentWrapper');
+    const contentBg = document.getElementById('contentBg');
 
     /* ============================================================
        背景动画 — 数据
@@ -373,11 +374,11 @@
     window.__resizeCanvas = resizeCanvas;
 
     /* ============================================================
-       路由切换后的处理：
-       1. 滚动复位到顶部
-       2. 清空搜索框
+       内容区背景 — 路由切换后复位滚动位置
+       .content-bg 是 fixed 钉在视口上的，永远铺满可视区，
+       不需要手动设置高度。只需把滚动容器滚回顶部。
        ============================================================ */
-    function onRouteChange() {
+    function adjustContentBg() {
         if (!contentWrapper) return;
         // 双重 rAF 确保 docsify 渲染完成后再复位
         requestAnimationFrame(() => {
@@ -385,22 +386,24 @@
                 contentWrapper.scrollTop = 0;
             });
         });
-        // 清空搜索框
-        const searchInput = document.querySelector('.search input');
-        if (searchInput) {
-            searchInput.value = '';
-            // 触发 input 事件让 docsify 搜索插件刷新结果
-            searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-        // 隐藏搜索结果面板
-        const resultsPanel = document.querySelector('.search .results-panel');
-        if (resultsPanel) {
-            resultsPanel.style.display = 'none';
-        }
     }
 
     // 暴露给 docsify 插件
-    window.__onRouteChange = onRouteChange;
+    window.__adjustContentBg = adjustContentBg;
+
+    /* ============================================================
+       随机子域名生成
+       例：abc.flava.woen.pics / kzp.flava.woen.pics
+       ============================================================ */
+    function getRandomSubdomain() {
+        const chars = 'abcdefghijklmnopqrstuvwxyz';
+        const length = Math.floor(Math.random() * 8) + 3; // 3~10 位
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += chars[Math.floor(Math.random() * chars.length)];
+        }
+        return result;
+    }
 
     /* ============================================================
        侧边栏 — 菜单折叠 / 展开
@@ -451,54 +454,61 @@
     window.__syncSidebar = syncSidebar;
 
     /* ============================================================
-       返回主页 — 跳转到随机子域名.flava.woen.pics
+       侧边栏 — 菜单按钮 & 返回主页
        ============================================================ */
-    function getRandomSubdomain() {
-        const chars = 'abcdefghijklmnopqrstuvwxyz';
-        const length = Math.floor(Math.random() * 8) + 3; // 3~10 位随机长度
-        let result = '';
-        for (let i = 0; i < length; i++) {
-            result += chars[Math.floor(Math.random() * chars.length)];
+    function initSidebarControls() {
+        if (menuIcon) {
+            menuIcon.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+                document.body.classList.toggle('sidebar-open');
+            });
         }
-        return result;
-    }
-
-    function initHomeButton() {
-        if (!homeBtn) return;
-        homeBtn.addEventListener('click', e => {
-            e.preventDefault();
-            const subdomain = getRandomSubdomain();
-            const targetUrl = 'https://' + subdomain + '.flava.woen.pics';
-            // 先关闭侧边栏，再跳转
-            sidebar.classList.remove('active');
-            document.body.classList.remove('sidebar-open');
-            // 跳转到随机子域名
-            window.location.href = targetUrl;
-        });
+        if (homeBtn) {
+            homeBtn.addEventListener('click', e => {
+                e.preventDefault();
+                // 跳转到 随机小写英文字母.flava.woen.pics
+                const sub = getRandomSubdomain();
+                window.location.href = 'https://' + sub + '.flava.woen.pics';
+            });
+        }
     }
 
     /* ============================================================
-       搜索结果点击 → 清空搜索框
+       搜索框 — 点击搜索结果后清空搜索框并隐藏面板
        ============================================================ */
-    function initSearchResultClear() {
-        // 使用事件委托，监听搜索结果面板的点击
-        document.addEventListener('click', e => {
-            const searchResult = e.target.closest('.search .results-panel a');
-            if (searchResult) {
-                // 延迟清空，让 docsify 先完成路由跳转
-                setTimeout(() => {
-                    const searchInput = document.querySelector('.search input');
-                    if (searchInput) {
-                        searchInput.value = '';
-                        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-                    }
-                    const resultsPanel = document.querySelector('.search .results-panel');
-                    if (resultsPanel) {
-                        resultsPanel.style.display = 'none';
-                    }
-                }, 100);
+    function initSearchClear() {
+        // 等待 docsify 搜索插件渲染完
+        const tryAttach = () => {
+            const searchInput = document.querySelector('.search input');
+            const resultsPanel = document.querySelector('.search .results-panel');
+            if (!searchInput || !resultsPanel) {
+                setTimeout(tryAttach, 300);
+                return;
             }
-        });
+
+            // 事件委托：监听搜索结果点击
+            document.addEventListener('click', e => {
+                const resultLink = e.target.closest('.search .results-panel a');
+                if (resultLink) {
+                    // 延迟清空，等路由跳转完成
+                    setTimeout(() => {
+                        searchInput.value = '';
+                        // 触发 input 事件让搜索插件刷新
+                        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        // 隐藏结果面板
+                        resultsPanel.style.display = 'none';
+                    }, 150);
+                }
+            });
+
+            // 路由变化时也清空搜索框
+            window.addEventListener('hashchange', () => {
+                searchInput.value = '';
+                searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                resultsPanel.style.display = 'none';
+            });
+        };
+        tryAttach();
     }
 
     /* ============================================================
@@ -510,26 +520,18 @@
         initSidebarControls();
         initTreeToggle();
         initTreeNavigation();
-        initSearchResultClear();
+        initSearchClear();
 
         // 初始高亮
         setTimeout(syncSidebar, 100);
+        // 初始复位
+        setTimeout(adjustContentBg, 200);
 
         // 窗口缩放
         window.addEventListener('resize', () => resizeCanvas());
 
         // hash 变化 → 同步高亮
         window.addEventListener('hashchange', syncSidebar);
-    }
-
-    function initSidebarControls() {
-        if (menuIcon) {
-            menuIcon.addEventListener('click', () => {
-                sidebar.classList.toggle('active');
-                document.body.classList.toggle('sidebar-open');
-            });
-        }
-        initHomeButton();
     }
 
     if (document.readyState === 'loading') {

@@ -5,7 +5,7 @@
    · 侧边栏（树形菜单）
    · 文档正文半透明白色圆角矩形背景（20% 透明度，离边缘 20px）
    · 白色系文字配色
-   · 深色搜索框
+   · 搜索框深色主题
    · 响应式
    ============================================================ */
 
@@ -22,13 +22,13 @@ html, body {
 body {
     font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
     background: #000;
-    color: #e0e0e0;
-    overflow: hidden;          /* 防止 body 滚动，只有 content-wrapper 滚动 */
+    color: #ffffff;
+    overflow: hidden;          /* body 不滚动，由 content-wrapper 内部滚动 */
     line-height: 1.6;
 }
 
-a { color: #ff8c42; text-decoration: none; }
-a:hover { color: #ff4500; }
+a { color: rgb(190, 200, 255); text-decoration: none; }
+a:hover { color: #ffffff; }
 
 /* ---------- 顶部导航栏 ---------- */
 .top-navbar {
@@ -45,7 +45,7 @@ a:hover { color: #ff4500; }
     align-items: center;
     padding-left: 16px;
     gap: 12px;
-    border-bottom: 1px solid rgba(255, 69, 0, 0.25);
+    border-bottom: 1px solid rgba(190, 200, 255, 0.25);
     margin: 0 !important;
 }
 
@@ -59,14 +59,14 @@ a:hover { color: #ff4500; }
     background: #fff; border-radius: 0;
     transition: background 0.2s;
 }
-.menu-icon:hover span { background: #ff4500; }
+.menu-icon:hover span { background: rgb(190, 200, 255); }
 
 .nav-text {
     color: #fff;
     font-size: 0.95rem;
     font-weight: 600;
     letter-spacing: 1.5px;
-    text-shadow: 0 0 10px rgba(255, 69, 0, 0.5);
+    text-shadow: 0 0 10px rgba(190, 200, 255, 0.5);
 }
 
 /* ---------- 侧边栏 ---------- */
@@ -82,7 +82,7 @@ a:hover { color: #ff4500; }
     transition: left 0.3s ease;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid rgba(255, 69, 0, 0.15);
+    border-right: 1px solid rgba(190, 200, 255, 0.15);
     overflow: hidden;
 }
 
@@ -96,11 +96,11 @@ a:hover { color: #ff4500; }
 
 .back-button {
     display: inline-block;
-    color: #ffb380;
+    color: rgb(190, 200, 255);
     font-size: 0.85rem;
     transition: color 0.2s;
 }
-.back-button:hover { color: #ffd0a0; }
+.back-button:hover { color: #ffffff; }
 
 .sidebar-body {
     flex: 1;
@@ -110,7 +110,7 @@ a:hover { color: #ff4500; }
 
 /* 滚动条 */
 .sidebar-body::-webkit-scrollbar { width: 4px; }
-.sidebar-body::-webkit-scrollbar-thumb { background: rgba(255,69,0,0.2); border-radius: 2px; }
+.sidebar-body::-webkit-scrollbar-thumb { background: rgba(190,200,255,0.2); border-radius: 2px; }
 
 .tree-title {
     color: rgba(255,255,255,0.35);
@@ -139,13 +139,13 @@ a:hover { color: #ff4500; }
 
 .tree-list .tree-label:hover,
 .tree-list [data-route]:hover {
-    color: #ffb380;
-    background: rgba(255, 69, 0, 0.08);
+    color: rgb(190, 200, 255);
+    background: rgba(190, 200, 255, 0.08);
 }
 
 .tree-list [data-route].active {
-    color: #ffd0a0;
-    background: rgba(255, 69, 0, 0.12);
+    color: #ffffff;
+    background: rgba(190, 200, 255, 0.12);
     font-weight: 600;
 }
 
@@ -160,7 +160,7 @@ a:hover { color: #ff4500; }
 
 .tree-item.has-children.open > .tree-label::before {
     content: '▾ ';
-    color: #ffb380;
+    color: rgb(190, 200, 255);
 }
 
 /* 子菜单 */
@@ -194,15 +194,13 @@ a:hover { color: #ff4500; }
 }
 
 /* ---------- 半透明白色圆角矩形背景 ----------
-   关键：position: fixed 钉在视口上
-   top: 62px  = 42px 导航栏 + 20px 间距
-   left/right: 20px → 离左右边缘各 20px
-   bottom: 20px → 离下边缘 20px
-   这样背景永远铺满可视区域，不随内容滚动
+   关键：position: fixed 钉在视口上，与 content-wrapper 同级
+   → 背景永远铺满可视区，不随内容滚动
+   → left/right: 20px 严格保证四边 20px 间隙
 */
 .content-bg {
     position: fixed;
-    top: 62px;
+    top: 62px;           /* 42px 导航栏 + 20px 间距 */
     left: 20px;
     right: 20px;
     bottom: 20px;
@@ -212,12 +210,12 @@ a:hover { color: #ff4500; }
     -webkit-backdrop-filter: blur(6px);
     border: 1px solid rgba(255, 255, 255, 0.18);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    z-index: 5;                 /* 在画布之上，在内容之下 */
-    pointer-events: none;       /* 不拦截鼠标事件 */
-    transition: left 0.3s ease;
+    z-index: 5;            /* 在画布之上，在文字之下 */
+    pointer-events: none;  /* 不拦截鼠标事件 */
+    transition: left 0.3s ease, right 0.3s ease;
 }
 
-/* 侧边栏打开时背景右移 */
+/* 侧边栏打开时背景左移 */
 @media (min-width: 769px) {
     body.sidebar-open .content-bg {
         left: calc(20px + 240px);
@@ -225,19 +223,19 @@ a:hover { color: #ff4500; }
 }
 
 /* ---------- 文档内容区包裹层 ----------
-   和 .content-bg 完全重叠，但 z-index 更高
-   内部滚动，文字始终在白色背景之上
+   和 .content-bg 同级，都钉在视口上
+   内部 overflow-y: auto 实现独立滚动
 */
 .content-wrapper {
     position: fixed;
-    z-index: 10;
+    z-index: 10;          /* 在背景之上 */
     top: 62px;
     left: 20px;
     right: 20px;
     bottom: 20px;
     overflow-y: auto;
     overflow-x: hidden;
-    transition: left 0.3s ease;
+    transition: left 0.3s ease, right 0.3s ease;
 }
 
 /* 侧边栏打开时内容区右移 */
@@ -253,10 +251,10 @@ a:hover { color: #ff4500; }
     z-index: 1;
     padding: 36px 48px;
     min-height: 100%;
-    color: #ffffff;             /* 默认白色文字 */
+    color: #ffffff;
 }
 
-/* ---------- Markdown 内容（白色系文字） ---------- */
+/* ---------- Markdown 内容（白色系） ---------- */
 .markdown-section {
     color: #ffffff;
     line-height: 1.85;
@@ -276,28 +274,25 @@ a:hover { color: #ff4500; }
 
 .markdown-section h1 {
     font-size: 2rem;
-    border-bottom: 2px solid rgba(190, 200, 255, 0.4);
+    border-bottom: 2px solid rgba(190, 200, 255, 0.3);
     padding-bottom: 10px;
 }
 
 .markdown-section h2 {
     font-size: 1.45rem;
-    border-bottom: 1px solid rgba(190, 200, 255, 0.3);
+    border-bottom: 1px solid rgba(190, 200, 255, 0.2);
     padding-bottom: 6px;
 }
 
 .markdown-section h3 { font-size: 1.15rem; }
 .markdown-section h4 { font-size: 1rem; }
 
-.markdown-section p {
-    margin-bottom: 14px;
-    color: #ffffff;
-}
+.markdown-section p { margin-bottom: 14px; color: #ffffff; }
 
 /* 链接 */
 .markdown-section a {
     color: rgb(190, 200, 255);
-    border-bottom: 1px dashed rgba(190, 200, 255, 0.5);
+    border-bottom: 1px dashed rgba(190, 200, 255, 0.4);
     transition: all 0.2s;
 }
 .markdown-section a:hover {
@@ -324,7 +319,7 @@ a:hover { color: #ff4500; }
     padding: 18px;
     overflow-x: auto;
     margin: 16px 0;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .markdown-section pre code {
@@ -374,7 +369,7 @@ a:hover { color: #ff4500; }
 }
 
 .markdown-section tr:hover td {
-    background: rgba(190, 200, 255, 0.08);
+    background: rgba(190, 200, 255, 0.06);
 }
 
 /* 分割线 */
@@ -384,15 +379,13 @@ a:hover { color: #ff4500; }
     margin: 28px 0;
 }
 
-/* 图片 */
 .markdown-section img {
     max-width: 100%;
     border-radius: 8px;
     border: 1px solid rgba(190, 200, 255, 0.2);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* 列表 */
 .markdown-section ul,
 .markdown-section ol {
     padding-left: 1.5em;
@@ -402,9 +395,7 @@ a:hover { color: #ff4500; }
 
 .markdown-section li { margin-bottom: 6px; }
 
-/* ============================================================
-   搜索框 —— 深色主题
-   ============================================================ */
+/* ---------- docsify 搜索框（深色主题） ---------- */
 .search {
     margin-bottom: 24px;
 }
@@ -422,7 +413,7 @@ a:hover { color: #ff4500; }
 }
 
 .search input::placeholder {
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.35);
 }
 
 .search input:focus {
@@ -430,14 +421,12 @@ a:hover { color: #ff4500; }
     box-shadow: 0 0 12px rgba(190, 200, 255, 0.3);
 }
 
-/* 搜索结果面板 */
 .search .results-panel {
     background: rgba(30, 30, 40, 0.95);
     border: 1px solid rgba(190, 200, 255, 0.25);
     border-radius: 8px;
     margin-top: 6px;
     overflow: hidden;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .search .results-panel a {
@@ -446,23 +435,14 @@ a:hover { color: #ff4500; }
     display: block;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     font-size: 0.88rem;
-    transition: background 0.15s, color 0.15s;
 }
 
 .search .results-panel a:hover {
-    background: rgba(190, 200, 255, 0.12);
-    color: rgb(190, 200, 255);
+    background: rgba(190, 200, 255, 0.1);
+    color: #ffffff;
 }
 
 .search .results-panel a:last-child { border-bottom: none; }
-
-/* 搜索结果高亮 */
-.search .results-panel mark {
-    background: rgba(190, 200, 255, 0.3);
-    color: #ffffff;
-    padding: 0 2px;
-    border-radius: 2px;
-}
 
 /* ---------- 响应式 ---------- */
 @media (max-width: 768px) {
@@ -498,7 +478,7 @@ a:hover { color: #ff4500; }
 
 /* ---------- 加载提示 ---------- */
 #app > p:first-child {
-    color: rgba(255,255,255,0.5);
+    color: rgba(255,255,255,0.4);
     font-size: 0.9rem;
 }
 
