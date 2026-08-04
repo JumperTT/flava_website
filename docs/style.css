@@ -1,12 +1,13 @@
 /* ============================================================
-   Flava Docs — 完整样式表
+   Flava Docs — 完整样式表（最终版）
    · 背景画布（fixed 全屏）
    · 顶部导航栏
    · 侧边栏（树形菜单）
-   · 半透明白色圆角矩形背景（20% 白，离边缘 20px，fixed 钉视口）
-   · docsify 内容区白色系文字
-   · 表格无交替色（全透明）
-   · 搜索框深色
+   · 半透明白色圆角矩形背景（20% 透明度，离边缘 20px）
+     → 与 .content-wrapper 同级，fixed 钉视口，永不断层
+   · 文档文字白色系 + 标题 rgb(190,200,255)
+   · 表格全透明、无交替色
+   · 搜索框深色主题
    ============================================================ */
 
 /* ---------- Reset ---------- */
@@ -23,7 +24,7 @@ body {
     font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
     background: #000;
     color: #ffffff;
-    overflow-x: hidden;
+    overflow: hidden;          /* 防止 body 自己滚动；滚动交给 .content-wrapper */
     line-height: 1.6;
 }
 
@@ -37,7 +38,7 @@ a:hover { color: #ffffff; }
     left: 0 !important;
     width: 100% !important;
     height: 42px;
-    background: rgba(20, 20, 20, 0.85);
+    background: rgba(20, 20, 28, 0.82);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     z-index: 9999;
@@ -45,7 +46,7 @@ a:hover { color: #ffffff; }
     align-items: center;
     padding-left: 16px;
     gap: 12px;
-    border-bottom: 1px solid rgba(190, 200, 255, 0.25);
+    border-bottom: 1px solid rgba(190, 200, 255, 0.2);
     margin: 0 !important;
 }
 
@@ -66,7 +67,7 @@ a:hover { color: #ffffff; }
     font-size: 0.95rem;
     font-weight: 600;
     letter-spacing: 1.5px;
-    text-shadow: 0 0 10px rgba(190, 200, 255, 0.5);
+    text-shadow: 0 0 10px rgba(190, 200, 255, 0.4);
 }
 
 /* ---------- 侧边栏 ---------- */
@@ -75,7 +76,7 @@ a:hover { color: #ffffff; }
     top: 42px; left: -240px;
     width: 240px;
     height: calc(100vh - 42px);
-    background: rgba(20, 20, 20, 0.82);
+    background: rgba(20, 20, 28, 0.78);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     z-index: 99;
@@ -85,7 +86,6 @@ a:hover { color: #ffffff; }
     border-right: 1px solid rgba(190, 200, 255, 0.15);
     overflow: hidden;
 }
-
 .sidebar.active { left: 0; }
 
 .sidebar-header {
@@ -107,7 +107,6 @@ a:hover { color: #ffffff; }
     overflow-y: auto;
     padding: 12px 8px 20px;
 }
-
 .sidebar-body::-webkit-scrollbar { width: 4px; }
 .sidebar-body::-webkit-scrollbar-thumb { background: rgba(190,200,255,0.25); border-radius: 2px; }
 
@@ -134,19 +133,18 @@ a:hover { color: #ffffff; }
     transition: all 0.2s;
     user-select: none;
 }
-
 .tree-list .tree-label:hover,
 .tree-list [data-route]:hover {
     color: rgb(190, 200, 255);
     background: rgba(190, 200, 255, 0.08);
 }
-
 .tree-list [data-route].active {
     color: #ffffff;
     background: rgba(190, 200, 255, 0.15);
     font-weight: 600;
 }
 
+/* 父级箭头 */
 .tree-item.has-children > .tree-label::before {
     content: '▸ ';
     display: inline-block;
@@ -154,7 +152,6 @@ a:hover { color: #ffffff; }
     color: rgba(255,255,255,0.3);
     font-size: 0.75rem;
 }
-
 .tree-item.has-children.open > .tree-label::before {
     content: '▾ ';
     color: rgb(190, 200, 255);
@@ -167,10 +164,7 @@ a:hover { color: #ffffff; }
     margin-left: 14px;
     display: none;
 }
-
-.tree-item.has-children.open > .tree-children {
-    display: block;
-}
+.tree-item.has-children.open > .tree-children { display: block; }
 
 /* ---------- 背景画布 ---------- */
 .grid-canvas {
@@ -180,7 +174,6 @@ a:hover { color: #ffffff; }
     z-index: 0;
     pointer-events: none;
 }
-
 .fire-canvas {
     position: fixed;
     top: 0; left: 0;
@@ -190,38 +183,41 @@ a:hover { color: #ffffff; }
 }
 
 /* ============================================================
-   关键：.content-bg 是 BODY 的直接子元素，position: fixed
-   钉在视口上，永远 = 可视区域大小。
-   不嵌套在滚动容器里 → 高度不受内容长短影响
-   → 文字永远不会超出背景。
+   核心：半透明白色圆角矩形背景
+   - 与 .content-wrapper 同级，直接挂 body 下
+   - position: fixed → 永远钉在视口，不随内容滚动
+   - top/left/right/bottom 全部固定 → 永远铺满可视区
+   - z-index 5，在画布(0/1)之上、文字容器(10)之下
    ============================================================ */
 .content-bg {
     position: fixed;
+    z-index: 5;
     top: 62px;          /* 42px 导航栏 + 20px 间距 */
-    left: 20px;         /* 离左边缘 20px */
-    right: 20px;        /* 离右边缘 20px */
-    bottom: 20px;       /* 离下边缘 20px（紧贴底部留 20px） */
-    background: rgba(255, 255, 255, 0.20);
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+    background: rgba(255, 255, 255, 0.20);   /* 20% 白色 */
     border-radius: 20px;
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     border: 1px solid rgba(255, 255, 255, 0.18);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    z-index: 5;         /* 在画布之上，在 content-wrapper 之下 */
-    pointer-events: none;
+    pointer-events: none;  /* 不挡鼠标事件 */
 }
 
-/* 侧边栏打开时背景左边界右移 */
+/* 侧边栏打开时，背景和文字容器一起右移 */
 @media (min-width: 769px) {
-    body.sidebar-open .content-bg {
+    body.sidebar-open .content-bg,
+    body.sidebar-open .content-wrapper {
         left: calc(20px + 240px);
     }
 }
 
 /* ============================================================
-   .content-wrapper 也是 BODY 直接子元素，fixed 钉视口，
-   内部 overflow-y: auto 滚动文字。
-   z-index 高于 .content-bg → 文字永远在白底前面。
+   文档内容滚动容器
+   - 与 .content-bg 同级、同样 fixed 钉视口
+   - z-index 10 在背景之上，文字永远有白底衬着
+   - 内部 overflow-y: auto 自己管理滚动
    ============================================================ */
 .content-wrapper {
     position: fixed;
@@ -235,12 +231,6 @@ a:hover { color: #ffffff; }
     transition: left 0.3s ease;
 }
 
-@media (min-width: 769px) {
-    body.sidebar-open .content-wrapper {
-        left: calc(20px + 240px);
-    }
-}
-
 /* ---------- docsify 内容区 ---------- */
 #app {
     position: relative;
@@ -248,13 +238,13 @@ a:hover { color: #ffffff; }
     padding: 36px 48px;
 }
 
-/* ---------- Markdown 内容（白色系文字） ---------- */
+/* ---------- Markdown 内容（白色系） ---------- */
 .markdown-section {
     color: #ffffff;
     line-height: 1.85;
 }
 
-/* 标题：rgb(190, 200, 255) 浅蓝紫 */
+/* 标题统一浅蓝紫 rgb(190,200,255) */
 .markdown-section h1,
 .markdown-section h2,
 .markdown-section h3,
@@ -263,7 +253,7 @@ a:hover { color: #ffffff; }
     margin-top: 28px;
     margin-bottom: 14px;
     font-weight: 700;
-    text-shadow: 0 0 12px rgba(190, 200, 255, 0.3);
+    text-shadow: 0 0 14px rgba(190, 200, 255, 0.35);
 }
 
 .markdown-section h1 {
@@ -271,20 +261,15 @@ a:hover { color: #ffffff; }
     border-bottom: 2px solid rgba(190, 200, 255, 0.35);
     padding-bottom: 10px;
 }
-
 .markdown-section h2 {
     font-size: 1.45rem;
     border-bottom: 1px solid rgba(190, 200, 255, 0.25);
     padding-bottom: 6px;
 }
-
 .markdown-section h3 { font-size: 1.15rem; }
 .markdown-section h4 { font-size: 1rem; }
 
-.markdown-section p {
-    margin-bottom: 14px;
-    color: #ffffff;
-}
+.markdown-section p { margin-bottom: 14px; color: #ffffff; }
 
 /* 链接 */
 .markdown-section a {
@@ -310,7 +295,7 @@ a:hover { color: #ffffff; }
 
 /* 代码块 */
 .markdown-section pre {
-    background: rgba(20, 20, 20, 0.92) !important;
+    background: rgba(20, 20, 28, 0.92) !important;
     border: 1px solid rgba(190, 200, 255, 0.2);
     border-radius: 10px;
     padding: 18px;
@@ -318,7 +303,6 @@ a:hover { color: #ffffff; }
     margin: 16px 0;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
-
 .markdown-section pre code {
     background: none;
     color: #e8e8e8;
@@ -338,34 +322,30 @@ a:hover { color: #ffffff; }
     color: #f0f0f0;
 }
 
-/* ============================================================
-   表格：全部透明，无交替色
-   ============================================================ */
+/* 表格 —— 全透明，无交替色 */
 .markdown-section table {
     width: 100%;
     border-collapse: collapse;
     margin: 16px 0;
     font-size: 0.9rem;
 }
-
 .markdown-section th {
-    background: rgba(190, 200, 255, 0.15);
+    background: rgba(190, 200, 255, 0.12);
     color: #ffffff;
     padding: 10px 14px;
     text-align: left;
     border: 1px solid rgba(190, 200, 255, 0.25);
     font-weight: 700;
 }
-
 .markdown-section td {
     padding: 10px 14px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     color: #ffffff;
-    background: transparent;   /* 透明，不渲染白色 */
+    background: transparent;   /* 强制透明，杜绝交替灰 */
 }
-
-/* 关键：关闭偶数行和 hover 的白色/浅色背景 */
-.markdown-section tr:nth-child(even) td {
+/* 关键：覆盖任何可能的斑马纹 */
+.markdown-section tr:nth-child(even) td,
+.markdown-section tr:nth-child(odd) td {
     background: transparent;
 }
 .markdown-section tr:hover td {
@@ -391,20 +371,15 @@ a:hover { color: #ffffff; }
     margin-bottom: 14px;
     color: #ffffff;
 }
+.markdown-section li { margin-bottom: 6px; color: #ffffff; }
 
-.markdown-section li { margin-bottom: 6px; }
-
-/* ============================================================
-   搜索框 —— 深色主题
-   ============================================================ */
-.search {
-    margin-bottom: 24px;
-}
+/* ---------- 搜索框（深色主题） ---------- */
+.search { margin-bottom: 24px; position: relative; }
 
 .search input {
     width: 100%;
     padding: 10px 16px;
-    background: rgba(25, 25, 35, 0.9);
+    background: rgba(20, 20, 28, 0.85);
     border: 1px solid rgba(190, 200, 255, 0.3);
     border-radius: 8px;
     color: #ffffff;
@@ -412,71 +387,50 @@ a:hover { color: #ffffff; }
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
-
-.search input::placeholder {
-    color: rgba(255, 255, 255, 0.4);
-}
-
+.search input::placeholder { color: rgba(255,255,255,0.45); }
 .search input:focus {
     border-color: rgb(190, 200, 255);
     box-shadow: 0 0 12px rgba(190, 200, 255, 0.3);
 }
 
-/* 搜索结果面板 —— 深色 + 可见 */
+/* 搜索结果面板 */
 .search .results-panel {
-    background: rgba(25, 25, 35, 0.96);
-    border: 1px solid rgba(190, 200, 255, 0.3);
+    background: rgba(20, 20, 28, 0.95) !important;
+    border: 1px solid rgba(190, 200, 255, 0.25) !important;
     border-radius: 8px;
     margin-top: 6px;
     overflow: hidden;
-    display: block;          /* 确保面板可见 */
-    max-height: 360px;
-    overflow-y: auto;
+    /* 不要设 display:none —— 由 docsify 搜索插件控制显隐 */
 }
-
 .search .results-panel a {
-    color: #ffffff;
+    color: #ffffff !important;
     padding: 10px 16px;
     display: block;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 0.88rem;
+}
+.search .results-panel a:hover {
+    background: rgba(190, 200, 255, 0.12) !important;
+    color: rgb(190, 200, 255) !important;
+}
+.search .results-panel a:last-child { border-bottom: none; }
+.search .results-panel .empty {
+    color: rgba(255,255,255,0.5);
+    padding: 10px 16px;
     font-size: 0.88rem;
 }
 
-.search .results-panel a:hover {
-    background: rgba(190, 200, 255, 0.12);
-    color: rgb(190, 200, 255);
-}
-
-.search .results-panel a:last-child { border-bottom: none; }
-
-/* 搜索结果为空 */
-.search .results-panel .no-results {
-    color: rgba(255,255,255,0.4);
-    padding: 10px 16px;
-    font-size: 0.85rem;
-}
-
-/* ============================================================
-   响应式
-   ============================================================ */
+/* ---------- 响应式 ---------- */
 @media (max-width: 768px) {
+    .content-bg,
     .content-wrapper {
-        top: 56px;
-        left: 20px;
-        right: 20px;
-        bottom: 20px;
-        padding: 0;
-    }
-
-    .content-bg {
-        top: 56px;
+        top: 56px;       /* 42 + 14 */
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
         border-radius: 14px;
     }
-
-    #app {
-        padding: 24px 18px;
-    }
-
+    #app { padding: 24px 18px; }
     .markdown-section h1 { font-size: 1.6rem; }
     .markdown-section h2 { font-size: 1.25rem; }
 }
@@ -491,13 +445,8 @@ a:hover { color: #ffffff; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(190, 200, 255, 0.45); }
 
 /* ---------- 加载提示 ---------- */
-#app > p:first-child {
-    color: rgba(255,255,255,0.4);
-    font-size: 0.9rem;
-}
+#app > p:first-child { color: rgba(255,255,255,0.5); font-size: 0.9rem; }
 
-/* ---------- 隐藏 docsify 自带的左下角侧边栏开关按钮 ---------- */
+/* ---------- 隐藏 docsify 自带侧边栏开关 ---------- */
 .sidebar-toggle { display: none !important; }
-
-/* ---------- 防止 docsify 主题给 body 加 padding ---------- */
 body { padding-top: 0 !important; }
