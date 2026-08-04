@@ -1,10 +1,10 @@
 /* ============================================================
    bg-animation.js
    ─────────────────────────────────────────────────
-   1. 背景动画：白色旋转网格 + 火焰光晕 + 漂浮粒子
+   1. 背景动画：旋转网格 + 火焰光晕 + 漂浮粒子
    2. 侧边栏交互：树形折叠 / 展开 / 路由跳转
    3. 与 docsify 联动
-   4. 返回主页 → 随机子域名跳转
+   4. 返回主页 → 随机小写英文字母子域名
    5. 搜索结果点击后清空搜索框
    ============================================================ */
 
@@ -22,6 +22,7 @@
     const menuIcon = document.getElementById('menuIcon');
     const homeBtn = document.getElementById('homeBtn');
     const contentWrapper = document.getElementById('contentWrapper');
+    const contentBg = document.getElementById('contentBg');
 
     /* ============================================================
        背景动画 — 数据
@@ -213,7 +214,8 @@
             if (p.offsetX > p.baseOffsetX + 10) p.velocityOffsetX -= 0.05;
             if (p.offsetX < p.baseOffsetX - 10) p.velocityOffsetX += 0.05;
             p.velocityOffsetY = Math.max(p.minVelocityOffset, Math.min(p.maxVelocityOffset, p.velocityOffsetY));
-            p.velocityOffsetX = Math.max(p.minVelocityOffset, Math.min(p.minVelocityOffset, p.velocityOffsetX));
+            // 修复原代码 typo：minVelocityOffset 重复 → 改为 maxVelocityOffset
+            p.velocityOffsetX = Math.max(p.minVelocityOffset, Math.min(p.maxVelocityOffset, p.velocityOffsetX));
             p.velocityOffsetY *= 0.98;
             p.velocityOffsetX *= 0.98;
         });
@@ -366,52 +368,29 @@
     window.__resizeCanvas = resizeCanvas;
 
     /* ============================================================
-       路由切换后复位滚动位置
-       背景现在是 CSS 伪元素 (position:fixed)，
-       高度永远 = 视口高度，不需要 JS 去调高度。
+       路由切换后：复位滚动 + 清空搜索框
        ============================================================ */
-    function adjustContentBg() {
-        if (!contentWrapper) return;
-        // 双重 rAF 确保 docsify 渲染完成后再复位
+    function onRouteChange() {
+        // 双重 rAF 确保 docsify 渲染完成后再滚到顶
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-                contentWrapper.scrollTop = 0;
+                if (contentWrapper) contentWrapper.scrollTop = 0;
             });
         });
-    }
 
-    window.__adjustContentBg = adjustContentBg;
-
-    /* ============================================================
-       清空搜索框
-       ============================================================ */
-    function clearSearch() {
+        // 清空搜索框
         const searchInput = document.querySelector('.search input');
         const resultsPanel = document.querySelector('.search .results-panel');
         if (searchInput) {
             searchInput.value = '';
-            searchInput.dispatchEvent(new Event('input'));
+            searchInput.dispatchEvent(new Event('input', { bubbles: true }));
         }
         if (resultsPanel) {
             resultsPanel.style.display = 'none';
         }
     }
 
-    window.__clearSearch = clearSearch;
-
-    /* ============================================================
-       随机子域名生成
-       3~10 位随机小写英文字母
-       ============================================================ */
-    function getRandomSubdomain() {
-        const chars = 'abcdefghijklmnopqrstuvwxyz';
-        const length = Math.floor(Math.random() * 8) + 3; // 3~10
-        let result = '';
-        for (let i = 0; i < length; i++) {
-            result += chars[Math.floor(Math.random() * chars.length)];
-        }
-        return result;
-    }
+    window.__onRouteChange = onRouteChange;
 
     /* ============================================================
        侧边栏 — 菜单折叠 / 展开
@@ -462,7 +441,18 @@
 
     /* ============================================================
        侧边栏 — 菜单按钮 & 返回主页
+       返回主页 → 跳转到 随机小写英文字母.flava.woen.pics
        ============================================================ */
+    function getRandomSubdomain() {
+        const chars = 'abcdefghijklmnopqrstuvwxyz';
+        const length = Math.floor(Math.random() * 8) + 3; // 3~10 位
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += chars[Math.floor(Math.random() * chars.length)];
+        }
+        return result;
+    }
+
     function initSidebarControls() {
         if (menuIcon) {
             menuIcon.addEventListener('click', () => {
@@ -470,27 +460,43 @@
                 document.body.classList.toggle('sidebar-open');
             });
         }
+
         if (homeBtn) {
             homeBtn.addEventListener('click', e => {
                 e.preventDefault();
-                const sub = getRandomSubdomain();
-                window.location.href = 'https://' + sub + '.flava.woen.pics';
+                const subdomain = getRandomSubdomain();
+                window.location.href = 'https://' + subdomain + '.flava.woen.pics';
             });
         }
     }
 
     /* ============================================================
-       搜索结果点击 → 清空搜索框
-       用事件委托监听动态生成的搜索结果
+       搜索结果点击 → 清空搜索框 + 隐藏面板
        ============================================================ */
     function initSearchResultHandler() {
         document.addEventListener('click', e => {
-            const searchResult = e.target.closest('.search .results-panel a');
-            if (searchResult) {
-                // 延迟一点等路由切换完成
-                setTimeout(() => {
-                    clearSearch();
-                }, 150);
+            const resultLink = e.target.closest('.search .results-panel a');
+            if (!resultLink) return;
+
+            // 等 docsify 完成路由跳转后再清空
+            setTimeout(() => {
+                const searchInput = document.querySelector('.search input');
+                const resultsPanel = document.querySelector('.search .results-panel');
+                if (searchInput) {
+                    searchInput.value = '';
+                    searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                if (resultsPanel) {
+                    resultsPanel.style.display = 'none';
+                }
+            }, 150);
+        });
+
+        // 点击搜索框以外的地方也隐藏结果面板
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.search')) {
+                const resultsPanel = document.querySelector('.search .results-panel');
+                if (resultsPanel) resultsPanel.style.display = 'none';
             }
         });
     }
@@ -507,13 +513,11 @@
         initSearchResultHandler();
 
         setTimeout(syncSidebar, 100);
-        setTimeout(adjustContentBg, 200);
 
         window.addEventListener('resize', () => resizeCanvas());
         window.addEventListener('hashchange', () => {
             syncSidebar();
-            // 路由切换时也清空搜索框
-            setTimeout(clearSearch, 200);
+            onRouteChange();
         });
     }
 

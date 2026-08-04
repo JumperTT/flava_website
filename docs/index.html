@@ -70,16 +70,30 @@
     <canvas id="gridCanvas" class="grid-canvas"></canvas>
     <canvas id="fireCanvas" class="fire-canvas"></canvas>
 
-    <!-- ========== 文档内容区 ==========
-         不再内嵌 .content-bg，背景由 CSS 伪元素绘制，
-         保证 100% 跟随文档实际高度，永不截断。 -->
+    <!--
+        ============================================================
+        关键布局说明：
+        .content-bg 和 .content-wrapper 是 BODY 的直接子元素，
+        两者都用 position: fixed 钉在视口上，互不嵌套。
+        这样 .content-bg 的高度 = 视口高度（永远铺满），
+        不受文档内容长短影响，文字永远不会超出背景。
+        ============================================================
+    -->
+
+    <!-- 半透明白色圆角矩形背景（fixed 钉视口，永远铺满可视区） -->
+    <div class="content-bg" id="contentBg"></div>
+
+    <!-- 文档内容区（fixed 钉视口，内部滚动） -->
     <main class="content-wrapper" id="contentWrapper">
+        <!-- docsify 挂载点 -->
         <div id="app"></div>
     </main>
 
     <!-- ========== 脚本 ========== -->
+    <!-- 先加载 bg-animation.js，确保全局函数在 docsify 插件调用前就位 -->
+    <script src="bg-animation.js"></script>
     <script>
-        // docsify 配置
+        // docsify 配置 —— 关闭自带侧边栏，由我们自定义
         window.$docsify = {
             name: 'Flava 文档',
             repo: '',
@@ -88,7 +102,7 @@
             loadNavbar: false,
             subMaxLevel: 3,
             maxLevel: 4,
-            auto2top: false,           // 关掉，避免干扰 fixed 容器的滚动
+            auto2top: false,          // 关闭！window 不滚动，由 bg-animation 控制 contentWrapper.scrollTop
             search: {
                 placeholder: '🔍 搜索文档',
                 noData: '未找到结果'
@@ -96,7 +110,7 @@
             plugins: [
                 function (hook, vm) {
                     hook.doneEach(function () {
-                        // 重绘背景动画
+                        // 路由切换后重绘背景
                         if (window.__resizeCanvas) {
                             window.__resizeCanvas();
                         }
@@ -104,22 +118,17 @@
                         if (window.__syncSidebar) {
                             window.__syncSidebar();
                         }
-                        // 复位滚动 + 伪元素背景天然跟随高度，无需手动调
-                        if (window.__adjustContentBg) {
-                            window.__adjustContentBg();
-                        }
-                        // 路由切换后清空搜索框
-                        if (window.__clearSearch) {
-                            window.__clearSearch();
+                        // 路由切换后复位滚动位置 + 清空搜索框
+                        if (window.__onRouteChange) {
+                            window.__onRouteChange();
                         }
                     });
                 }
             ]
         };
     </script>
-    <!-- 先加载我们的脚本（定义全局函数），再加载 docsify -->
-    <script src="bg-animation.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/docsify@5/lib/docsify.min.js"></script>
+    <!-- 搜索插件 -->
     <script src="https://cdn.jsdelivr.net/npm/docsify@5/lib/plugins/search.min.js"></script>
 </body>
 </html>
