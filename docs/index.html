@@ -27,38 +27,30 @@
             <div class="tree-title">文档列表</div>
             <ul class="tree-list" id="sidebarTree">
                 <li class="tree-item" data-route="README">
-                    <span>🏠 首页</span>
+                    <span>首页</span>
                 </li>
-                <li class="tree-item has-children open">
-                    <span class="tree-label">📁 项目文档</span>
+                <li class="tree-item has-children close">
+                    <span class="tree-label">拓展系统</span>
                     <ul class="tree-children">
-                        <li class="tree-item" data-route="project/intro">
-                            <span>项目介绍</span>
-                        </li>
-                        <li class="tree-item" data-route="project/design">
-                            <span>设计文档</span>
-                        </li>
-                        <li class="tree-item" data-route="project/test">
-                            <span>测试用例</span>
-                        </li>
+                        <span class="tree-label">1.0</span>
+                        <ul class="tree-children">
+                            <li class="tree-item" data-route="extra/1d0/filestructure.md">
+                                <span>文件结构</span>
+                            </li>
+                            <li class="tree-item" data-route="extra/1d0/api.md">
+                                <span>lua端api</span>
+                            </li>
+                            <li class="tree-item" data-route="extra/1d0/keys.md">
+                                <span>键盘api数字对照表</span>
+                            </li>
+                            <li class="tree-item" data-route="extra/1d0/uifile.md">
+                                <span>.ui文件</span>
+                            </li>
+                            <li class="tree-item" data-route="extra/1d0/process.md">
+                                <span>flava拓展加载机制</span>
+                            </li>
+                        </ul>
                     </ul>
-                </li>
-                <li class="tree-item has-children open">
-                    <span class="tree-label">🔧 技术文档</span>
-                    <ul class="tree-children">
-                        <li class="tree-item" data-route="tech/api">
-                            <span>API 文档</span>
-                        </li>
-                        <li class="tree-item" data-route="tech/deploy">
-                            <span>部署指南</span>
-                        </li>
-                    </ul>
-                </li>
-                <li class="tree-item" data-route="meeting">
-                    <span>📝 会议记录</span>
-                </li>
-                <li class="tree-item" data-route="guide">
-                    <span>📖 用户手册</span>
                 </li>
             </ul>
         </div>
