@@ -1,12 +1,11 @@
-\### flava extra 1.0帮助文档 键盘api数字对照表
+### flava extra 1.0 帮助文档 键盘 API 数字对照表
 
-\-----
+---
 
-如果你需要检测键盘事件，我整理了Imgui键盘对应数字的表格，你可以自己来查
+如果你需要检测键盘事件，我整理了 ImGui 键盘对应数字的表格，你可以自己来查
 
 ```text
-
-0\~511：ImGui内部预留区间，请勿使用
+0~511：ImGui内部预留区间，请勿使用
 512: Tab（制表符）
 513: LeftArrow（左箭头）
 514: RightArrow（右箭头）
@@ -98,8 +97,8 @@
 600: Slash（斜杠/）
 601: Semicolon（分号;）
 602: Equal（等号=）
-603: LeftBracket（左方括号\[）
-604: Backslash（反斜杠\\）
+603: LeftBracket（左方括号[）
+604: Backslash（反斜杠\）
 605: RightBracket（右方括号]）
 606: GraveAccent（反引号`）
 607: CapsLock（大写锁定键）
@@ -119,7 +118,7 @@
 621: Keypad9（小键盘9）
 622: KeypadDecimal（小键盘小数点）
 623: KeypadDivide（小键盘除号/）
-624: KeypadMultiply（小键盘乘号\*）
+624: KeypadMultiply（小键盘乘号*）
 625: KeypadSubtract（小键盘减号-）
 626: KeypadAdd（小键盘加号+）
 627: KeypadEnter（小键盘回车）
@@ -162,6 +161,4 @@
 664: ReservedForModShift（ImGui内部保留Shift标识，请勿业务使用）
 665: ReservedForModAlt（ImGui内部保留Alt标识，请勿业务使用）
 666: ReservedForModSuper（ImGui内部保留Super标识，请勿业务使用）
-
 ```
-
