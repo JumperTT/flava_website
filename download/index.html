@@ -22,14 +22,12 @@
     <!-- ========== 主内容区 ========== -->
     <main class="content-wrapper" id="contentWrapper">
         <div id="app">
+            <!-- 页面标题 -->
             <h1 class="page-title">Flava Download</h1>
 
-            <!-- 文件状态指示器 -->
-            <div id="fileStatus" class="file-status checking">正在检测文件...</div>
-
-            <!-- 主下载卡片 -->
+            <!-- 主程序下载 -->
             <div class="download-section">
-                <div class="download-section-title">⚡ 最新版</div>
+                <div class="download-section-title">⚡最新版</div>
                 <div class="download-card">
                     <div class="download-info">
                         <div class="download-icon">⚙️</div>
@@ -38,21 +36,15 @@
                             <span class="download-meta">7.51MB</span>
                         </div>
                     </div>
-                    <button class="download-btn" id="openDownload">下载</button>
+                    <a class="download-btn" href="#" id="openDownloadDialog">下载</a>
                 </div>
-                <div class="download-section-title">📄 历史版本</div>
+                <div class="download-section-title">📄历史版本</div>
             </div>
 
             <!-- 提示 -->
             <div class="notice-box">
-                <strong>提示：</strong>下载可能被各种软件拦截。下载如果失败，请点击上方「下载」按钮选择其他下载方式。
+                <strong>提示：</strong>下载可能被各种软件拦截。下载如果失败，请到文档处查询下载方法
             </div>
-
-            <!-- 诊断日志（调试用，可折叠） -->
-            <details class="diag-details">
-                <summary>🔧 诊断日志（排查问题时展开）</summary>
-                <pre id="diagLog" class="diag-log"></pre>
-            </details>
 
             <!-- 返回主页 -->
             <a href="https://flava.woen.pics" class="back-home" id="backHomeBtn">← 返回主页</a>
@@ -60,63 +52,56 @@
     </main>
 
     <!-- ========== 下载弹窗 ========== -->
-    <div class="modal-overlay" id="downloadModal">
-        <div class="modal-box">
-            <button class="modal-close" id="closeModal">×</button>
-            <h2 class="modal-title">选择下载方式</h2>
-            <p class="modal-desc">由于下载可能被各种方式拦截，这里准备了多种方式下载</p>
+    <div class="dialog-overlay" id="dialogOverlay">
+        <div class="dialog-box">
+            <button class="dialog-close" id="dialogClose">✕</button>
+            <div class="dialog-title">多方式下载</div>
+            <div class="dialog-desc">由于下载可能被各种方式拦截，这里准备了多种方式下载</div>
 
-            <!-- 进度条（全局共用） -->
-            <div class="progress-wrap">
-                <div class="progress-bar" id="downloadProgress"></div>
-                <span class="progress-label" id="progressLabel">等待操作...</span>
+            <!-- 方式1：直接下载 -->
+            <div class="method-block">
+                <div class="method-title">1. 直接下载</div>
+                <button class="method-btn" id="btnDirectDownload">点击下载</button>
             </div>
 
-            <!-- 方式1: 直接下载 -->
+            <!-- 方式2：直接写入文件 -->
             <div class="method-block">
-                <div class="method-title">1️⃣ 直接下载</div>
-                <button class="method-btn primary" id="btnDirectDownload">⬇ 点击下载</button>
-            </div>
-
-            <!-- 方式2: 写入文件 -->
-            <div class="method-block">
-                <div class="method-title">2️⃣ 直接写入文件</div>
+                <div class="method-title">2. 直接写入文件</div>
                 <div class="method-row">
-                    <button class="method-btn" id="btnSelectDir">📁 选择位置</button>
-                    <span class="dir-hint" id="selectedDirText">尚未选择目录</span>
-                    <button class="method-btn primary" id="btnWriteFile">💾 开始下载</button>
+                    <button class="method-btn" id="btnPickDir">选择位置</button>
+                    <button class="method-btn" id="btnWriteFile">开始下载</button>
                 </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="progress-text" id="progressText">等待操作...</div>
             </div>
 
-            <!-- 方式3: base64 复制解码 -->
+            <!-- 方式3：base64复制解码 -->
             <div class="method-block">
-                <div class="method-title">3️⃣ base64 复制解码</div>
-                <div class="method-row">
-                    <button class="method-btn" id="btnEncodeCopy">🔐 开始获取并编码</button>
-                    <button class="method-btn" id="btnCopy">📋 复制</button>
+                <div class="method-title">3. base64 复制解码</div>
+                <button class="method-btn" id="btnEncodeCopy">开始获取并编码</button>
+                <div class="textarea-wrapper">
+                    <textarea class="method-textarea" id="base64CopyText" readonly placeholder="base64 编码内容将显示在这里..."></textarea>
+                    <button class="method-btn copy-btn" id="btnCopyBase64">复制</button>
                 </div>
-                <textarea class="base64-box non-selectable" id="base64Output"
-                    readonly placeholder="编码结果将显示在这里（不可框选，请使用复制按钮）"
-                    onselectstart="return false" oncopy="return false"></textarea>
-                <a href="#" class="tutorial-link">不会使用？点击查看教程 →</a>
+                <a href="https://www.baidu.com" target="_blank" class="tutorial-link">不会使用？点击查看教程</a>
             </div>
 
-            <!-- 方式4: base64 拖拽解码 -->
+            <!-- 方式4：base64拖拽解码 -->
             <div class="method-block">
-                <div class="method-title">4️⃣ base64 拖拽解码</div>
-                <button class="method-btn" id="btnEncodeDrag">🔐 开始获取并编码</button>
-                <textarea class="base64-box selectable" id="base64OutputDrag"
-                    readonly placeholder="编码结果将显示在这里（可框选拖拽）"></textarea>
-                <a href="#" class="tutorial-link">不会使用？点击查看教程 →</a>
+                <div class="method-title">4. base64 拖拽解码</div>
+                <button class="method-btn" id="btnEncodeDrag">开始获取并编码</button>
+                <div class="textarea-wrapper">
+                    <textarea class="method-textarea" id="base64DragText" placeholder="base64 编码内容将显示在这里（可框选拖拽）..."></textarea>
+                </div>
+                <a href="https://www.baidu.com" target="_blank" class="tutorial-link">不会使用？点击查看教程</a>
             </div>
         </div>
     </div>
 
-    <!-- ========== Toast 提示 ========== -->
-    <div class="toast" id="toast"></div>
-
     <!-- ========== 脚本 ========== -->
     <script src="bg-animation.js"></script>
-    <script src="download.js"></script>
+    <script src="download-dialog.js"></script>
 </body>
 </html>
