@@ -1,6 +1,6 @@
 {
     "version":"1.0",
-    "description":"测试。",
-    "choices":["测试文本1","测试程序1"],
-    "urls":["download/a.txt","download/test.exe"]
+    "description":"我很好奇你是怎么看到这行字的",
+    "choices":["nullptr!!!"],
+    "urls":["download/"]
 }
