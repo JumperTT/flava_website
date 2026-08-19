@@ -1,79 +1,105 @@
 /* ============================================================
-   download-dialog.js — Flava Download 弹窗逻辑
+   download-dialog.js — Flava Download 弹窗逻辑（多版本支持）
    · 零 fallback、零模拟、零假数据
-   · 全部通过 fetch() 动态获取 ./download/flava.exe 真实二进制
-   · Base64 编码使用 FileReader（零栈溢出，支持任意大小文件）
-   · 初始化时强制预检，文件不可达则禁用全部按钮并明确报错
+   · 全部通过 fetch() 动态获取真实二进制文件
+   · 点击不同版本的「下载」按钮 → 弹窗标题变为「下载vX.X」
+   · 四种下载方式全部指向当前选中版本的文件
+   · Base64 分块编码（兼容 Edge）
+   · 方式2 优先 showSaveFilePicker
+   · 复制按钮大文本降级到 textarea + execCommand
    ============================================================ */
 
 (function () {
     'use strict';
 
-    // ---------- DOM 元素 ----------
-    const openBtn       = document.getElementById('openDialogBtn');
-    const overlay       = document.getElementById('dialogOverlay');
-    const closeBtn      = document.getElementById('dialogClose');
+    // ============================================================
+    // DOM 元素获取（带防御性检查）
+    // ============================================================
+    function $(id) { return document.getElementById(id); }
 
-    const btnDirect     = document.getElementById('btnDirectDownload');
-    const btnPickDir    = document.getElementById('btnPickDir');
-    const btnWriteFile  = document.getElementById('btnWriteFile');
-    const progressBar   = document.getElementById('progressBar');
-    const progressText  = document.getElementById('progressText');
+    const overlay       = $('dialogOverlay');
+    const closeBtn      = $('dialogClose');
+    const dialogTitle   = $('dialogTitle');
+    const dialogDesc    = $('dialogDesc');
 
-    const btnEncodeCopy = document.getElementById('btnEncodeCopy');
-    const btnEncodeDrag = document.getElementById('btnEncodeDrag');
-    const textReadonly  = document.getElementById('base64Readonly');
-    const textEditable  = document.getElementById('base64Editable');
-    const btnCopy       = document.getElementById('btnCopy');
+    const btnDirect     = $('btnDirectDownload');
+    const btnPickDir    = $('btnPickDir');
+    const btnWriteFile  = $('btnWriteFile');
+    const progressBar   = $('progressBar');
+    const progressText  = $('progressText');
 
-    // ---------- 配置 ----------
-    const FILE_NAME = 'flava.exe';
-    const FILE_URL  = './download/flava.exe';
+    const btnEncodeCopy = $('btnEncodeCopy');
+    const btnEncodeDrag = $('btnEncodeDrag');
+    const textReadonly  = $('base64Readonly');
+    const textEditable  = $('base64Editable');
+    const btnCopy       = $('btnCopy');
 
-    // 缓存：避免重复下载
-    let cachedBuffer = null;
-    let fetchInFlight = null;
+    // 检查关键元素
+    const required = { overlay, closeBtn, dialogTitle, btnDirect, btnPickDir, btnWriteFile, btnEncodeCopy, btnEncodeDrag, textReadonly, textEditable, btnCopy };
+    for (const [name, el] of Object.entries(required)) {
+        if (!el) console.error('[Flava] ❌ 找不到 DOM 元素:', name);
+    }
 
-    // 全局状态：文件是否可达
-    let fileReachable = false;
+    // ---------- 当前选中的版本信息 ----------
+    let currentVersion = '';
+    let currentFile    = '';
+    let currentSize    = '';
 
-    console.log('[Flava] FILE_URL =', FILE_URL);
+    // 缓存：每个版本独立缓存 ArrayBuffer
+    const cacheMap = new Map();
+    const inflightMap = new Map();
+
+    console.log('[Flava] 弹窗脚本已加载');
 
     // ============================================================
     // 工具函数
     // ============================================================
 
     /**
-     * ArrayBuffer → Base64（无栈溢出风险）
-     * 使用 Blob + FileReader.readAsDataURL，绕过 btoa 的长度限制
+     * ArrayBuffer → Base64（分块处理，零栈溢出）
      */
-    function arrayBufferToBase64(buffer) {
+    function arrayBufferToBase64Chunked(buffer, onProgress) {
         return new Promise((resolve, reject) => {
-            const blob = new Blob([buffer], { type: 'application/octet-stream' });
-            const reader = new FileReader();
-            reader.onload = function () {
-                // result 形如 "data:application/octet-stream;base64,xxxx"
-                const b64 = reader.result.split(',')[1];
-                resolve(b64);
-            };
-            reader.onerror = function () {
-                reject(new Error('FileReader 编码失败: ' + reader.error.message));
-            };
-            reader.readAsDataURL(blob);
+            try {
+                const bytes = new Uint8Array(buffer);
+                const total = bytes.length;
+                const CHUNK = 0x6000; // 24576 字节
+                let result = '';
+                let offset = 0;
+
+                function processChunk() {
+                    const start = offset;
+                    const end = Math.min(offset + CHUNK, total);
+                    const slice = bytes.subarray(start, end);
+                    let binary = '';
+                    for (let i = 0; i < slice.length; i++) {
+                        binary += String.fromCharCode(slice[i]);
+                    }
+                    result += btoa(binary);
+
+                    offset = end;
+                    const pct = (offset / total) * 100;
+                    if (onProgress) onProgress(pct);
+
+                    if (offset < total) {
+                        setTimeout(processChunk, 0);
+                    } else {
+                        resolve(result);
+                    }
+                }
+
+                processChunk();
+            } catch (e) {
+                reject(e);
+            }
         });
     }
 
-    /**
-     * 统一错误提示
-     */
     function showError(title, detail) {
         console.error('[Flava]', title, detail || '');
         alert(title + (detail ? '\n\n' + detail : ''));
     }
 
-    /**
-     * 精确诊断 fetch 失败原因
-     */
     async function diagnoseFetchError(url, originalError) {
         const errMsg = (originalError && originalError.message) || '';
 
@@ -81,29 +107,30 @@
             return (
                 '❌ 网络请求失败 (Failed to fetch)\n\n' +
                 '你当前访问的地址是:\n  ' + location.href + '\n\n' +
-                '这个错误 99% 是因为服务器没返回 CORS 头。\n\n' +
-                '✅ 唯一正确的启动方式（用本项目自带的服务器）:\n' +
-                '  1) 打开终端，cd 到项目目录\n' +
-                '  2) 运行: node server.js\n' +
-                '  3) 浏览器打开: http://localhost:5500\n\n' +
-                '⚠️ 以下方式都会失败，不要再用:\n' +
-                '  ✗ VS Code Live Server（无 CORS 头）\n' +
-                '  ✗ python -m http.server（无 CORS 头）\n' +
-                '  ✗ 双击 index.html（file:// 协议禁止 fetch）\n\n' +
-                '请求地址: ' + url
+                '请确认:\n' +
+                '  1) 服务器正在运行 (node server.js)\n' +
+                '  2) 浏览器地址是 http://localhost:5500\n' +
+                '  3) 不是 http://127.0.0.1 (Edge 有时不认)\n' +
+                '  4) 不是 file:// 开头（双击 HTML 不行）\n' +
+                '  5) 控制台 Network 面板看 ' + url + ' 的状态码'
             );
         }
 
-        // 用 HEAD 做二次诊断
         try {
-            const head = await fetch(url, { method: 'HEAD', cache: 'no-cache' });
+            const head = await fetch(url, {
+                method: 'GET',
+                cache: 'no-cache',
+                headers: { 'Range': 'bytes=0-0' }
+            });
             if (head.status === 404) {
                 return (
                     '❌ 文件不存在 (404)\n\n' +
                     '请求地址: ' + url + '\n\n' +
-                    '请确认 download/flava.exe 已放在项目根目录的 download/ 文件夹下。\n' +
-                    '当前项目根目录: ' + location.origin + '/'
+                    '请确认该版本文件已放在 download/ 文件夹下。'
                 );
+            }
+            if (head.status === 405) {
+                return '❌ 服务器不允许 GET 请求 (405)\n\n请确认使用的是配套的 node server.js';
             }
             if (head.status >= 500) {
                 return '❌ 服务器内部错误 (' + head.status + ')\n\n请检查服务器日志。';
@@ -115,25 +142,33 @@
     }
 
     // ============================================================
-    // 核心：动态获取真实文件（唯一数据源，绝不伪造）
+    // 核心：动态获取当前版本的真实文件
     // ============================================================
-    async function fetchFile(onProgress) {
-        if (cachedBuffer) {
-            if (onProgress) onProgress(100, cachedBuffer.byteLength);
-            return cachedBuffer;
-        }
-        if (fetchInFlight) return fetchInFlight;
+    function fetchFile(onProgress) {
+        const url = './download/' + encodeURIComponent(currentFile);
 
-        fetchInFlight = (async () => {
-            console.log('[Flava] ▶ 开始动态获取文件:', FILE_URL);
-            const resp = await fetch(FILE_URL, {
+        // 命中缓存
+        const cached = cacheMap.get(currentFile);
+        if (cached) {
+            console.log('[Flava]   命中缓存:', currentFile, cached.byteLength, 'bytes');
+            if (onProgress) onProgress(100, cached.byteLength);
+            return Promise.resolve(cached);
+        }
+
+        // 正在请求中，复用同一个 promise
+        const inflight = inflightMap.get(currentFile);
+        if (inflight) return inflight;
+
+        const promise = (async () => {
+            console.log('[Flava] ▶ 开始获取文件:', url);
+            const resp = await fetch(url, {
                 method: 'GET',
                 cache: 'no-cache',
                 headers: { 'Accept': 'application/octet-stream' }
             });
 
             if (!resp.ok) {
-                const msg = await diagnoseFetchError(FILE_URL, {
+                const msg = await diagnoseFetchError(url, {
                     message: 'HTTP ' + resp.status + ' ' + resp.statusText
                 });
                 throw new Error(msg);
@@ -163,28 +198,25 @@
                 offset += c.length;
             }
 
-            // 校验：至少要有 MZ 头
             if (received >= 2) {
                 if (buffer[0] === 0x4D && buffer[1] === 0x5A) {
-                    console.log('[Flava]   ✅ MZ 头验证通过，是合法 PE 文件');
+                    console.log('[Flava]   ✅ MZ 头验证通过，合法 PE 文件');
                 } else {
-                    console.warn('[Flava]   ⚠️ 文件头不是 MZ:',
-                        buffer[0].toString(16), buffer[1].toString(16));
+                    console.warn('[Flava]   ⚠️ 文件头不是 MZ:', buffer[0].toString(16), buffer[1].toString(16));
                 }
             } else {
                 throw new Error('❌ 下载的文件为空（0 字节）');
             }
 
-            cachedBuffer = buffer.buffer;
+            const ab = buffer.buffer;
+            cacheMap.set(currentFile, ab);
             console.log('[Flava] ✅ 文件获取完成:', received, 'bytes');
-            return cachedBuffer;
+            return ab;
         })();
 
-        try {
-            return await fetchInFlight;
-        } finally {
-            fetchInFlight = null;
-        }
+        inflightMap.set(currentFile, promise);
+        promise.finally(() => inflightMap.delete(currentFile));
+        return promise;
     }
 
     // ============================================================
@@ -192,24 +224,55 @@
     // ============================================================
     function setProgress(percent, text) {
         const pct = Math.max(0, Math.min(100, Math.round(percent * 10) / 10));
-        progressBar.style.width = pct + '%';
-        progressText.textContent = text !== undefined ? text : (pct + '%');
+        if (progressBar) progressBar.style.width = pct + '%';
+        if (progressText) progressText.textContent = text !== undefined ? text : (pct + '%');
     }
 
     function resetProgress() {
         setProgress(0, '等待操作...');
     }
 
+    function resetTextareas() {
+        if (textReadonly) textReadonly.value = '';
+        if (textEditable) textEditable.value = '';
+    }
+
     // ============================================================
     // 弹窗控制
     // ============================================================
-    function openDialog()  { overlay.classList.add('active'); }
-    function closeDialog() { overlay.classList.remove('active'); }
+    function openDialog(version, file, size) {
+        currentVersion = version;
+        currentFile    = file;
+        currentSize    = size;
+
+        if (dialogTitle) dialogTitle.textContent = '下载v' + version;
+        if (dialogDesc)  dialogDesc.textContent  = '当前版本: v' + version + ' (' + size + ') — 由于下载可能被各种方式拦截，这里准备了多种方式下载';
+
+        // 重置状态 —— 全部启用
+        resetProgress();
+        resetTextareas();
+        if (btnDirect)     { btnDirect.textContent = '点击下载'; btnDirect.disabled = false; }
+        if (btnEncodeCopy) { btnEncodeCopy.textContent = '开始获取并编码'; btnEncodeCopy.disabled = false; }
+        if (btnEncodeDrag) { btnEncodeDrag.textContent = '开始获取并编码'; btnEncodeDrag.disabled = false; }
+        if (btnPickDir)    { btnPickDir.disabled = false; }
+        if (btnWriteFile)  { btnWriteFile.disabled = true; }  // 只有这个需要等选位置后才启用
+        if (progressBar)   { progressBar.style.background = ''; }
+
+        console.log('[Flava] 弹窗打开 → 版本 v' + version + ', 文件: ' + file);
+
+        if (overlay) overlay.classList.add('active');
+    }
+
+    function closeDialog() {
+        if (overlay) overlay.classList.remove('active');
+        console.log('[Flava] 弹窗关闭');
+    }
 
     // ============================================================
     // 方式1：直接下载
     // ============================================================
     async function directDownload() {
+        if (!btnDirect) return;
         try {
             btnDirect.disabled = true;
             btnDirect.textContent = '正在获取文件...';
@@ -222,7 +285,7 @@
             const url  = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = FILE_NAME;
+            a.download = currentFile;
             a.style.display = 'none';
             document.body.appendChild(a);
             a.click();
@@ -238,7 +301,7 @@
             console.error('[Flava] 直接下载失败:', err);
             showError('下载失败:', err.message);
             btnDirect.textContent = '点击下载';
-            btnDirect.disabled = !fileReachable;
+            btnDirect.disabled = false;
         }
     }
 
@@ -246,46 +309,81 @@
     // 方式2：File System Access API 写入文件
     // ============================================================
     let pickedDirHandle = null;
+    let pickedFileHandle = null;
+
+    function isFSAvailable() {
+        return 'showDirectoryPicker' in window || 'showSaveFilePicker' in window;
+    }
 
     async function pickDirectory() {
-        if (!window.showDirectoryPicker) {
+        if (!isFSAvailable()) {
             showError('❌ 当前浏览器不支持 File System Access API',
-                '要求：Chrome 86+ / Edge 86+ 桌面版，且通过 http://localhost 或 https:// 访问');
+                '要求：Chrome 86+ / Edge 86+ 桌面版\n\n' +
+                '且必须通过 http://localhost 或 https:// 访问\n' +
+                '当前地址: ' + location.href);
             return;
         }
+
         try {
-            pickedDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-            btnWriteFile.disabled = false;
-            progressText.textContent = '已选择目录: ' + pickedDirHandle.name + '，点击「开始下载」写入文件';
+            if ('showSaveFilePicker' in window) {
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: currentFile,
+                    types: [{
+                        description: '可执行文件',
+                        accept: { 'application/octet-stream': ['.exe'] }
+                    }]
+                });
+                pickedFileHandle = handle;
+                pickedDirHandle = null;
+                if (btnWriteFile) btnWriteFile.disabled = false;
+                if (progressText) progressText.textContent = '已选择保存位置，点击「开始下载」写入文件';
+            } else {
+                pickedDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+                pickedFileHandle = null;
+                if (btnWriteFile) btnWriteFile.disabled = false;
+                if (progressText) progressText.textContent = '已选择目录: ' + pickedDirHandle.name + '，点击「开始下载」写入文件';
+            }
             setProgress(0);
-            console.log('[Flava] 已选择目录:', pickedDirHandle.name);
         } catch (err) {
             if (err.name !== 'AbortError') {
-                console.error('[Flava] 选择目录失败:', err);
-                showError('选择目录失败:', err.name + ': ' + err.message);
+                console.error('[Flava] 选择位置失败:', err);
+                showError('选择位置失败:', err.name + ': ' + err.message);
             }
         }
     }
 
     async function writeFile() {
-        if (!pickedDirHandle) { showError('请先点击「选择位置」'); return; }
+        if (!pickedFileHandle && !pickedDirHandle) {
+            showError('请先点击「选择位置」');
+            return;
+        }
 
         try {
-            btnWriteFile.disabled = true;
-            btnPickDir.disabled = true;
+            if (btnWriteFile) btnWriteFile.disabled = true;
+            if (btnPickDir)   btnPickDir.disabled = true;
             setProgress(0, '正在获取文件...');
 
             const buffer = await fetchFile(p => setProgress(p, '下载中 ' + Math.round(p) + '%'));
 
-            const fileHandle = await pickedDirHandle.getFileHandle(FILE_NAME, { create: true });
-            const permission = await fileHandle.requestPermission({ mode: 'readwrite' });
-            if (permission !== 'granted') throw new Error('未获得文件写入权限（用户拒绝）');
+            let writable;
+            let targetName;
 
-            const writable = await fileHandle.createWritable({ keepExistingData: false });
+            if (pickedFileHandle) {
+                const permission = await pickedFileHandle.requestPermission({ mode: 'readwrite' });
+                if (permission !== 'granted') throw new Error('未获得文件写入权限（用户拒绝）');
+                writable = await pickedFileHandle.createWritable({ keepExistingData: false });
+                targetName = pickedFileHandle.name;
+            } else {
+                const fileHandle = await pickedDirHandle.getFileHandle(currentFile, { create: true });
+                const permission = await fileHandle.requestPermission({ mode: 'readwrite' });
+                if (permission !== 'granted') throw new Error('未获得文件写入权限（用户拒绝）');
+                writable = await fileHandle.createWritable({ keepExistingData: false });
+                targetName = currentFile;
+            }
 
             const total = buffer.byteLength;
             const bytes = new Uint8Array(buffer);
-            const chunkSize = 1024 * 1024; // 1MB
+            const chunkSize = 512 * 1024; // 512KB
             let written = 0;
 
             setProgress(0, '正在写入...');
@@ -299,32 +397,39 @@
             }
 
             await writable.close();
-            setProgress(100, '✅ 写入完成: ' + FILE_NAME + ' (' + (total / 1048576).toFixed(2) + ' MB)');
-            console.log('[Flava] ✅ 文件写入完成:', FILE_NAME, total, 'bytes');
+            setProgress(100, '✅ 写入完成: ' + targetName + ' (' + (total / 1048576).toFixed(2) + ' MB)');
+            console.log('[Flava] ✅ 文件写入完成:', targetName, total, 'bytes');
 
             setTimeout(() => {
-                btnWriteFile.disabled = false;
-                btnPickDir.disabled = false;
+                if (btnWriteFile) btnWriteFile.disabled = false;
+                if (btnPickDir)   btnPickDir.disabled = false;
             }, 1500);
         } catch (err) {
             console.error('[Flava] 写入文件失败:', err);
             let msg = '写入失败:\n\n' + err.message;
-            if (err.name === 'NotAllowedError') msg += '\n\n可能原因：未获得写入权限，或文件被其他程序占用';
-            else if (err.name === 'AbortError') msg += '\n\n可能被杀毒软件拦截';
-            else if (err.message.includes('Failed to fetch')) msg = await diagnoseFetchError(FILE_URL, err);
+            if (err.name === 'NotAllowedError') {
+                msg += '\n\n可能原因：未获得写入权限，或文件被杀毒软件/Edge 安全策略拦截';
+            } else if (err.name === 'SecurityError') {
+                msg += '\n\nEdge 安全策略阻止了此操作。\n' +
+                       '请确认地址栏是 http://localhost:5500（不是 http://127.0.0.1）\n' +
+                       '或尝试关闭 Edge 的"增强安全模式"（设置 → 隐私 → 关闭"增强安全模式"）';
+            } else if (err.message && err.message.includes('Failed to fetch')) {
+                msg = await diagnoseFetchError('./download/' + currentFile, err);
+            }
             showError('写入失败:', msg);
-            progressText.textContent = '❌ 出错';
-            btnWriteFile.disabled = false;
-            btnPickDir.disabled = false;
+            if (progressText) progressText.textContent = '❌ 出错';
+            if (btnWriteFile) btnWriteFile.disabled = false;
+            if (btnPickDir)   btnPickDir.disabled = false;
         }
     }
 
     // ============================================================
-    // 方式3 & 4：Base64 编码（使用 FileReader，零栈溢出）
+    // 方式3 & 4：Base64 分块编码
     // ============================================================
     async function encodeToBase64(targetTextarea) {
         const isReadonly = (targetTextarea === textReadonly);
         const btn = isReadonly ? btnEncodeCopy : btnEncodeDrag;
+        if (!btn) return;
 
         try {
             btn.disabled = true;
@@ -337,7 +442,9 @@
             btn.textContent = '正在编码...';
             await new Promise(r => requestAnimationFrame(r));
 
-            const b64 = await arrayBufferToBase64(buffer);
+            const b64 = await arrayBufferToBase64Chunked(buffer, p => {
+                btn.textContent = '编码中 ' + Math.round(p) + '%';
+            });
 
             targetTextarea.value = b64;
 
@@ -353,102 +460,119 @@
         } catch (err) {
             console.error('[Flava] Base64 编码失败:', err);
             targetTextarea.value = '';
-            const msg = err.message.includes('Failed to fetch')
-                ? await diagnoseFetchError(FILE_URL, err)
+            const msg = (err.message && err.message.includes('Failed to fetch'))
+                ? await diagnoseFetchError('./download/' + currentFile, err)
                 : '编码失败:\n\n' + err.message;
             showError('编码失败:', msg);
             btn.textContent = '开始获取并编码';
-            btn.disabled = !fileReachable;
+            btn.disabled = false;
         }
     }
 
     // ============================================================
-    // 复制按钮
+    // 复制按钮（大文本降级兼容 Edge）
     // ============================================================
     async function copyBase64() {
+        if (!textReadonly) return;
         const text = textReadonly.value;
         if (!text) { showError('没有可复制的内容', '请先点击「开始获取并编码」'); return; }
+
         try {
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                await navigator.clipboard.writeText(text);
+                try {
+                    await navigator.clipboard.writeText(text);
+                } catch (clipErr) {
+                    console.warn('[Flava] Clipboard API 失败，降级到 textarea:', clipErr.message);
+                    throw clipErr;
+                }
             } else {
-                textReadonly.removeAttribute('readonly');
-                textReadonly.select();
-                const ok = document.execCommand('copy');
-                textReadonly.setAttribute('readonly', '');
-                textReadonly.blur();
-                if (!ok) throw new Error('execCommand 复制失败');
+                throw new Error('Clipboard API 不可用');
             }
-            btnCopy.textContent = '✅ 已复制!';
-            btnCopy.classList.add('copied');
-            setTimeout(() => {
-                btnCopy.textContent = '复制';
-                btnCopy.classList.remove('copied');
-            }, 2000);
+
+            if (btnCopy) {
+                btnCopy.textContent = '✅ 已复制!';
+                btnCopy.classList.add('copied');
+                setTimeout(() => {
+                    btnCopy.textContent = '复制';
+                    btnCopy.classList.remove('copied');
+                }, 2000);
+            }
         } catch (err) {
-            showError('复制失败:', err.message + '\n\n请手动框选文本框内容并 Ctrl+C 复制');
+            // 降级：隐藏 textarea + execCommand
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.left = '-9999px';
+                ta.style.top = '0';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                const ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                if (!ok) throw new Error('execCommand 也失败了');
+
+                if (btnCopy) {
+                    btnCopy.textContent = '✅ 已复制!';
+                    btnCopy.classList.add('copied');
+                    setTimeout(() => {
+                        btnCopy.textContent = '复制';
+                        btnCopy.classList.remove('copied');
+                    }, 2000);
+                }
+            } catch (e2) {
+                showError('复制失败:', e2.message + '\n\n请手动框选文本框内容并 Ctrl+C 复制');
+            }
         }
     }
 
     // ============================================================
-    // 初始化预检：文件不可达则禁用全部按钮
+    // 初始化 —— 等 DOM 就绪后执行
     // ============================================================
-    async function initCheck() {
-        console.log('[Flava] 初始化预检: 检查文件是否可访问...');
-        try {
-            const head = await fetch(FILE_URL, { method: 'HEAD', cache: 'no-cache' });
-            if (!head.ok) throw new Error('HTTP ' + head.status + ' ' + head.statusText);
+    function bindEvents() {
+        console.log('[Flava] 开始绑定事件...');
 
-            fileReachable = true;
-            const len = head.headers.get('Content-Length');
-            console.log('[Flava] ✅ 文件存在，大小:', len || '未知', 'bytes');
-            console.log('[Flava]   Content-Type:', head.headers.get('Content-Type'));
-            console.log('[Flava] ✅ 所有下载方式已就绪');
-        } catch (err) {
-            fileReachable = false;
-            console.error('[Flava] ❌ 预检失败:', err.message);
+        // 版本下载按钮 → 动态打开弹窗
+        const dlBtns = document.querySelectorAll('.download-btn[data-version]');
+        console.log('[Flava] 找到', dlBtns.length, '个下载按钮');
+        dlBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const version = btn.getAttribute('data-version');
+                const file    = btn.getAttribute('data-file');
+                const size    = btn.getAttribute('data-size') || '';
+                console.log('[Flava] 用户点击下载按钮 → v' + version + ' (' + file + ')');
+                openDialog(version, file, size);
+            });
+        });
 
-            // 禁用所有触发下载的按钮
-            btnDirect.disabled = true;
-            btnPickDir.disabled = true;
-            btnEncodeCopy.disabled = true;
-            btnEncodeDrag.disabled = true;
+        // 弹窗关闭
+        if (closeBtn) closeBtn.addEventListener('click', closeDialog);
+        if (overlay)  overlay.addEventListener('click', e => { if (e.target === overlay) closeDialog(); });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && overlay && overlay.classList.contains('active')) closeDialog();
+        });
 
-            const detail = await diagnoseFetchError(FILE_URL, err);
-            console.error('[Flava] 禁用全部下载按钮，原因:\n', detail);
+        // 弹窗内按钮
+        if (btnDirect)     btnDirect.addEventListener('click', directDownload);
+        if (btnPickDir)    btnPickDir.addEventListener('click', pickDirectory);
+        if (btnWriteFile)  btnWriteFile.addEventListener('click', writeFile);
+        if (btnEncodeCopy) btnEncodeCopy.addEventListener('click', () => encodeToBase64(textReadonly));
+        if (btnEncodeDrag) btnEncodeDrag.addEventListener('click', () => encodeToBase64(textEditable));
+        if (btnCopy)       btnCopy.addEventListener('click', copyBase64);
 
-            // 在进度条区域显示错误
-            progressText.textContent = '❌ 文件无法访问，请检查服务器';
-            progressBar.style.width = '100%';
-            progressBar.style.background = '#ff4444';
-
-            // 弹窗里也提示一次
-            setTimeout(() => {
-                showError('⚠️ 初始化检查失败', detail + '\n\n页面上的所有下载按钮已被禁用，请修复后刷新页面。');
-            }, 500);
-        }
+        console.log('[Flava] ✅ 所有事件绑定完成');
+        console.log('[Flava] showSaveFilePicker:', 'showSaveFilePicker' in window ? '✅' : '❌');
+        console.log('[Flava] showDirectoryPicker:', 'showDirectoryPicker' in window ? '✅' : '❌');
+        console.log('[Flava] navigator.clipboard:', navigator.clipboard ? '✅' : '❌');
+        console.log('[Flava] 当前地址:', location.href);
     }
 
-    // ============================================================
-    // 绑定事件
-    // ============================================================
-    openBtn.addEventListener('click', openDialog);
-    closeBtn.addEventListener('click', closeDialog);
-    overlay.addEventListener('click', e => { if (e.target === overlay) closeDialog(); });
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Escape' && overlay.classList.contains('active')) closeDialog();
-    });
+    // 确保 DOM 就绪后再绑定
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindEvents);
+    } else {
+        bindEvents();
+    }
 
-    btnDirect.addEventListener('click', directDownload);
-    btnPickDir.addEventListener('click', pickDirectory);
-    btnWriteFile.addEventListener('click', writeFile);
-    btnEncodeCopy.addEventListener('click', () => encodeToBase64(textReadonly));
-    btnEncodeDrag.addEventListener('click', () => encodeToBase64(textEditable));
-    btnCopy.addEventListener('click', copyBase64);
-
-    // 初始化
-    resetProgress();
-    initCheck();
-
-    console.log('[Flava] 弹窗逻辑已就绪（零 fallback 版）');
+    console.log('[Flava] 脚本初始化完成');
 })();

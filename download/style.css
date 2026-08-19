@@ -520,3 +520,23 @@ body .content-wrapper #app {
 /* ---------- 隐藏 docsify 侧边栏开关 ---------- */
 .sidebar-toggle { display: none !important; }
 body { padding-top: 0 !important; }
+
+/* ---------- 版本下载按钮标记态 ---------- */
+.download-btn[data-version] {
+    position: relative;
+}
+.download-btn[data-version]::after {
+    content: 'v' attr(data-version);
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 6px;
+    background: rgba(190, 200, 255, 0.2);
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: rgb(190, 200, 255);
+    letter-spacing: 0.3px;
+}
+.download-btn[data-version]:hover::after {
+    background: rgba(190, 200, 255, 0.35);
+}

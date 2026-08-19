@@ -27,23 +27,24 @@
 
             <!-- 主程序下载 -->
             <div class="download-section">
-                <div class="download-section-title">⚡最新版</div>
+                <div class="download-section-title">⚡ 最新版</div>
+
+                <!-- v1.0  -->
                 <div class="download-card">
                     <div class="download-info">
                         <div class="download-icon">⚙️</div>
                         <div class="download-text">
-                            <span class="download-name">flava v1.0</span>
-                            <span class="download-meta">7.51MB</span>
+                            <span class="download-name">Flava v1.0</span>
+                            <span class="download-meta">第一个版本</span>
                         </div>
                     </div>
-                    <button class="download-btn" id="openDialogBtn">下载</button>
+                    <button class="download-btn" data-version="1.0" data-file="flava1.0.exe" data-size="7.52MB">下载</button>
                 </div>
-                <div class="download-section-title">📄历史版本</div>
-            </div>
 
+                <div class="download-section-title">📄 历史版本</div>
             <!-- 提示 -->
             <div class="notice-box">
-                <strong>提示：</strong>下载可能被各种软件拦截。如果下载失败，请使用弹窗中的其他方式
+                <strong>提示：</strong>下载可能被各种软件拦截。如果下载失败，请查看文档
             </div>
 
             <!-- 返回主页 -->
@@ -55,8 +56,8 @@
     <div class="dialog-overlay" id="dialogOverlay">
         <div class="dialog-box">
             <button class="dialog-close" id="dialogClose">✕</button>
-            <h2 class="dialog-title">下载</h2>
-            <p class="dialog-desc">由于下载可能被各种方式拦截，这里准备了多种方式下载</p>
+            <h2 class="dialog-title" id="dialogTitle">下载</h2>
+            <p class="dialog-desc" id="dialogDesc">由于下载可能被各种方式拦截，这里准备了多种方式下载</p>
 
             <!-- 方式1：直接下载 -->
             <div class="dlg-section">
@@ -85,7 +86,7 @@
                     <textarea class="dlg-textarea dlg-textarea-readonly" id="base64Readonly" readonly placeholder="点击上方按钮获取编码..."></textarea>
                     <button class="dlg-copy-btn" id="btnCopy">复制</button>
                 </div>
-                <a href="https://www.baidu.com" target="_blank" class="dlg-tutorial-link">不会使用？点击查看教程</a>
+                <a href="../docs/index.html#/download/download" target="_blank" class="dlg-tutorial-link">不会使用？点击查看教程</a>
             </div>
 
             <!-- 方式4：base64 拖拽 -->
@@ -93,13 +94,13 @@
                 <div class="dlg-section-title">4. base64 拖拽解码</div>
                 <button class="dlg-btn" id="btnEncodeDrag">开始获取并编码</button>
                 <textarea class="dlg-textarea" id="base64Editable" placeholder="点击上方按钮获取编码..."></textarea>
-                <a href="https://www.baidu.com" target="_blank" class="dlg-tutorial-link">不会使用？点击查看教程</a>
+                <a href="../docs/index.html#/download/download" target="_blank" class="dlg-tutorial-link">不会使用？点击查看教程</a>
             </div>
         </div>
     </div>
 
     <!-- ========== 脚本 ========== -->
-    <script src="bg-animation.js"></script>
     <script src="download-dialog.js"></script>
+    <script src="bg-animation.js"></script>
 </body>
 </html>
