@@ -127,9 +127,7 @@ body .content-wrapper #app {
 }
 
 /* ---------- 下载卡片 ---------- */
-.download-section {
-    margin-bottom: 32px;
-}
+.download-section { margin-bottom: 32px; }
 
 .download-section-title {
     color: rgb(190, 200, 255);
@@ -157,42 +155,21 @@ body .content-wrapper #app {
     box-shadow: 0 4px 20px rgba(190, 200, 255, 0.1);
 }
 
-.download-info {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
+.download-info { display: flex; align-items: center; gap: 16px; }
 
 .download-icon {
-    width: 44px;
-    height: 44px;
+    width: 44px; height: 44px;
     border-radius: 10px;
     background: rgba(190, 200, 255, 0.12);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
-    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; flex-shrink: 0;
 }
 
-.download-text {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
+.download-text { display: flex; flex-direction: column; gap: 2px; }
+.download-name { color: #ffffff; font-size: 1rem; font-weight: 600; }
+.download-meta { color: rgba(255, 255, 255, 0.5); font-size: 0.82rem; }
 
-.download-name {
-    color: #ffffff;
-    font-size: 1rem;
-    font-weight: 600;
-}
-
-.download-meta {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 0.82rem;
-}
-
-/* ---------- 下载按钮 ---------- */
+/* ---------- 下载按钮（版本徽标） ---------- */
 .download-btn {
     display: inline-flex;
     align-items: center;
@@ -217,6 +194,21 @@ body .content-wrapper #app {
     transform: translateY(-1px);
 }
 
+.download-btn[data-version] { position: relative; }
+.download-btn[data-version]::after {
+    content: 'v' attr(data-version);
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 6px;
+    background: rgba(190, 200, 255, 0.2);
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: rgb(190, 200, 255);
+    letter-spacing: 0.3px;
+}
+.download-btn[data-version]:hover::after { background: rgba(190, 200, 255, 0.35); }
+
 /* ---------- 提示信息 ---------- */
 .notice-box {
     background: rgba(190, 200, 255, 0.06);
@@ -228,9 +220,7 @@ body .content-wrapper #app {
     font-size: 0.88rem;
     line-height: 1.8;
 }
-.notice-box strong {
-    color: rgb(190, 200, 255);
-}
+.notice-box strong { color: rgb(190, 200, 255); }
 
 /* ---------- 返回主页按钮 ---------- */
 .back-home {
@@ -247,8 +237,6 @@ body .content-wrapper #app {
 /* ============================================================
    弹窗样式
    ============================================================ */
-
-/* 遮罩层 */
 .dialog-overlay {
     position: fixed;
     top: 0; left: 0;
@@ -264,12 +252,8 @@ body .content-wrapper #app {
     pointer-events: none;
     transition: opacity 0.3s ease;
 }
-.dialog-overlay.active {
-    opacity: 1;
-    pointer-events: auto;
-}
+.dialog-overlay.active { opacity: 1; pointer-events: auto; }
 
-/* 弹窗主体 */
 .dialog-box {
     position: relative;
     width: 90%;
@@ -284,34 +268,23 @@ body .content-wrapper #app {
     transform: translateY(20px) scale(0.97);
     transition: transform 0.3s ease;
 }
-.dialog-overlay.active .dialog-box {
-    transform: translateY(0) scale(1);
-}
+.dialog-overlay.active .dialog-box { transform: translateY(0) scale(1); }
 
-/* 关闭按钮 */
 .dialog-close {
     position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 32px;
-    height: 32px;
+    top: 14px; right: 14px;
+    width: 32px; height: 32px;
     border: none;
     background: rgba(190, 200, 255, 0.1);
     color: rgb(190, 200, 255);
     font-size: 1.1rem;
     border-radius: 8px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     transition: all 0.2s;
 }
-.dialog-close:hover {
-    background: rgba(190, 200, 255, 0.25);
-    color: #fff;
-}
+.dialog-close:hover { background: rgba(190, 200, 255, 0.25); color: #fff; }
 
-/* 弹窗标题 */
 .dialog-title {
     color: rgb(190, 200, 255);
     font-size: 1.5rem;
@@ -326,17 +299,12 @@ body .content-wrapper #app {
     line-height: 1.7;
 }
 
-/* 弹窗内分区 */
 .dlg-section {
     margin-bottom: 22px;
     padding-bottom: 18px;
     border-bottom: 1px solid rgba(190, 200, 255, 0.12);
 }
-.dlg-section:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
-}
+.dlg-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
 
 .dlg-section-title {
     color: rgb(190, 200, 255);
@@ -345,7 +313,6 @@ body .content-wrapper #app {
     margin-bottom: 10px;
 }
 
-/* 弹窗按钮 */
 .dlg-btn {
     display: inline-flex;
     align-items: center;
@@ -368,19 +335,10 @@ body .content-wrapper #app {
     border-color: rgb(190, 200, 255);
     box-shadow: 0 0 12px rgba(190, 200, 255, 0.2);
 }
-.dlg-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
+.dlg-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.dlg-btn-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-bottom: 10px;
-}
+.dlg-btn-row { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
 
-/* 进度条 */
 .dlg-progress-wrap {
     width: 100%;
     height: 10px;
@@ -397,17 +355,9 @@ body .content-wrapper #app {
     border-radius: 5px;
     transition: width 0.2s ease;
 }
-.dlg-progress-text {
-    font-size: 0.78rem;
-    color: rgba(255, 255, 255, 0.5);
-    margin-top: 6px;
-}
+.dlg-progress-text { font-size: 0.78rem; color: rgba(255,255,255,0.5); margin-top: 6px; }
 
-/* 文本框 */
-.dlg-textarea-wrap {
-    position: relative;
-    margin-top: 10px;
-}
+.dlg-textarea-wrap { position: relative; margin-top: 10px; }
 .dlg-textarea {
     width: 100%;
     min-height: 90px;
@@ -424,25 +374,13 @@ body .content-wrapper #app {
     resize: vertical;
     word-break: break-all;
 }
-.dlg-textarea:focus {
-    outline: none;
-    border-color: rgba(190, 200, 255, 0.45);
-    box-shadow: 0 0 8px rgba(190, 200, 255, 0.12);
-}
-.dlg-textarea-readonly {
-    user-select: none;
-    -webkit-user-select: none;
-}
-.dlg-textarea-readonly:focus {
-    border-color: rgba(190, 200, 255, 0.18);
-    box-shadow: none;
-}
+.dlg-textarea:focus { outline: none; border-color: rgba(190,200,255,0.45); box-shadow: 0 0 8px rgba(190,200,255,0.12); }
+.dlg-textarea-readonly { user-select: none; -webkit-user-select: none; }
+.dlg-textarea-readonly:focus { border-color: rgba(190,200,255,0.18); box-shadow: none; }
 
-/* 复制按钮 */
 .dlg-copy-btn {
     position: absolute;
-    top: 8px;
-    right: 8px;
+    top: 8px; right: 8px;
     padding: 5px 12px;
     background: rgba(190, 200, 255, 0.15);
     border: 1px solid rgba(190, 200, 255, 0.3);
@@ -454,17 +392,9 @@ body .content-wrapper #app {
     transition: all 0.2s;
     z-index: 2;
 }
-.dlg-copy-btn:hover {
-    background: rgba(190, 200, 255, 0.28);
-    border-color: rgb(190, 200, 255);
-}
-.dlg-copy-btn.copied {
-    background: rgba(80, 200, 120, 0.25);
-    border-color: rgba(80, 200, 120, 0.5);
-    color: #a0f0c0;
-}
+.dlg-copy-btn:hover { background: rgba(190, 200, 255, 0.28); border-color: rgb(190, 200, 255); }
+.dlg-copy-btn.copied { background: rgba(80,200,120,0.25); border-color: rgba(80,200,120,0.5); color: #a0f0c0; }
 
-/* 教程链接 */
 .dlg-tutorial-link {
     display: inline-block;
     margin-top: 8px;
@@ -472,38 +402,16 @@ body .content-wrapper #app {
     color: rgba(190, 200, 255, 0.7);
     transition: color 0.2s;
 }
-.dlg-tutorial-link:hover {
-    color: #ffffff;
-    text-decoration: underline;
-}
+.dlg-tutorial-link:hover { color: #ffffff; text-decoration: underline; }
 
 /* ---------- 响应式 ---------- */
 @media (max-width: 768px) {
-    .content-bg {
-        top: 56px;
-        left: 12px;
-        right: 12px;
-        bottom: 12px;
-        border-radius: 14px;
-    }
-    .content-wrapper {
-        top: 61px;
-        left: 17px;
-        right: 17px;
-        bottom: 17px;
-        border-radius: 14px;
-    }
+    .content-bg { top: 56px; left: 12px; right: 12px; bottom: 12px; border-radius: 14px; }
+    .content-wrapper { top: 61px; left: 17px; right: 17px; bottom: 17px; border-radius: 14px; }
     body .content-wrapper #app { padding: 24px 16px; }
     .page-title { font-size: 1.6rem; }
-
-    .download-card {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 14px;
-        padding: 16px;
-    }
+    .download-card { flex-direction: column; align-items: flex-start; gap: 14px; padding: 16px; }
     .download-btn { width: 100%; justify-content: center; }
-
     .dialog-box { padding: 28px 18px 20px 18px; }
     .dlg-btn { width: 100%; margin-right: 0; }
 }
@@ -511,32 +419,9 @@ body .content-wrapper #app {
 /* ---------- 滚动条美化 ---------- */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
-::-webkit-scrollbar-thumb {
-    background: rgba(190, 200, 255, 0.25);
-    border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover { background: rgba(190, 200, 255, 0.45); }
+::-webkit-scrollbar-thumb { background: rgba(190,200,255,0.25); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(190,200,255,0.45); }
 
-/* ---------- 隐藏 docsify 侧边栏开关 ---------- */
+/* ---------- 隐藏 docsify 残留 ---------- */
 .sidebar-toggle { display: none !important; }
 body { padding-top: 0 !important; }
-
-/* ---------- 版本下载按钮标记态 ---------- */
-.download-btn[data-version] {
-    position: relative;
-}
-.download-btn[data-version]::after {
-    content: 'v' attr(data-version);
-    display: inline-block;
-    margin-left: 6px;
-    padding: 1px 6px;
-    background: rgba(190, 200, 255, 0.2);
-    border-radius: 4px;
-    font-size: 0.72rem;
-    font-weight: 500;
-    color: rgb(190, 200, 255);
-    letter-spacing: 0.3px;
-}
-.download-btn[data-version]:hover::after {
-    background: rgba(190, 200, 255, 0.35);
-}

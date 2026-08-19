@@ -21,7 +21,6 @@
             return;
         }
 
-        /* ---------- 背景数据 ---------- */
         let redPoints = [], orangePoints = [], yellowPoints = [];
         let backgroundGlows = [], particles = [];
 
@@ -105,7 +104,6 @@
             });
         }
 
-        /* ---------- 绘制网格 ---------- */
         function drawGrid() {
             gridCtx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
             gridCtx.save();
@@ -122,7 +120,6 @@
             gridCtx.restore();
         }
 
-        /* ---------- 更新火焰 ---------- */
         function updateFlameVelocities() {
             redPoints.forEach(p => {
                 p.changeCounter++;
@@ -198,7 +195,6 @@
             fireCtx.globalAlpha = 1.0;
         }
 
-        /* ---------- 绘制火焰 ---------- */
         function drawFire() {
             fireCtx.clearRect(0, 0, fireCanvas.width, fireCanvas.height);
             backgroundGlows.forEach(g => {
@@ -235,7 +231,6 @@
             initFirePoints(); initBackgroundGlows(); initParticles(); drawGrid();
         }
 
-        /* ---------- 随机子域名 ---------- */
         function getRandomSubdomain() {
             const chars = 'abcdefghijklmnopqrstuvwxyz';
             const len = Math.floor(Math.random() * 8) + 3;
@@ -244,31 +239,24 @@
             return s;
         }
 
-        // ---------- 初始化 ----------
         resizeCanvas();
         animate();
         window.addEventListener('resize', resizeCanvas);
 
-        // 返回主页按钮
         const backBtn = document.getElementById('backHomeBtn');
         if (backBtn) {
             backBtn.addEventListener('click', e => {
                 e.preventDefault();
-                const target = 'https://' + getRandomSubdomain() + '.flava.woen.pics';
-                window.location.href = target;
+                window.location.href = 'https://' + getRandomSubdomain() + '.flava.woen.pics';
             });
         }
 
         console.log('[Flava BG] 背景动画已启动');
     }
 
-    // 确保 DOM 就绪后执行，且用 try-catch 包裹防止阻塞其他脚本
     function safeInit() {
-        try {
-            initBgAnimation();
-        } catch (err) {
-            console.error('[Flava BG] 背景动画初始化失败（不影响页面功能）:', err.message);
-        }
+        try { initBgAnimation(); }
+        catch (err) { console.error('[Flava BG] 背景动画初始化失败（不影响页面功能）:', err.message); }
     }
 
     if (document.readyState === 'loading') {
