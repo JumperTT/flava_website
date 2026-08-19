@@ -4,6 +4,7 @@
    · 顶部导航栏
    · 半透明白色圆角矩形背景（20% 透明度）
    · 下载卡片白色系 + 标题 rgb(190,200,255)
+   · 下载弹窗样式
    ============================================================ */
 
 /* ---------- Reset ---------- */
@@ -243,6 +244,239 @@ body .content-wrapper #app {
 }
 .back-home:hover { color: #ffffff; }
 
+/* ============================================================
+   弹窗样式
+   ============================================================ */
+
+/* 遮罩层 */
+.dialog-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.dialog-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* 弹窗主体 */
+.dialog-box {
+    position: relative;
+    width: 90%;
+    max-width: 680px;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: rgba(28, 28, 40, 0.95);
+    border: 1px solid rgba(190, 200, 255, 0.25);
+    border-radius: 16px;
+    padding: 32px 28px 28px 28px;
+    box-shadow: 0 16px 64px rgba(0, 0, 0, 0.5), 0 0 32px rgba(190, 200, 255, 0.08);
+    transform: translateY(20px) scale(0.97);
+    transition: transform 0.3s ease;
+}
+.dialog-overlay.active .dialog-box {
+    transform: translateY(0) scale(1);
+}
+
+/* 关闭按钮 */
+.dialog-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: rgba(190, 200, 255, 0.1);
+    color: rgb(190, 200, 255);
+    font-size: 1.1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+.dialog-close:hover {
+    background: rgba(190, 200, 255, 0.25);
+    color: #fff;
+}
+
+/* 弹窗标题 */
+.dialog-title {
+    color: rgb(190, 200, 255);
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-shadow: 0 0 12px rgba(190, 200, 255, 0.3);
+    margin-bottom: 6px;
+}
+.dialog-desc {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.88rem;
+    margin-bottom: 22px;
+    line-height: 1.7;
+}
+
+/* 弹窗内分区 */
+.dlg-section {
+    margin-bottom: 22px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid rgba(190, 200, 255, 0.12);
+}
+.dlg-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.dlg-section-title {
+    color: rgb(190, 200, 255);
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+/* 弹窗按钮 */
+.dlg-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 20px;
+    background: rgba(190, 200, 255, 0.12);
+    border: 1px solid rgba(190, 200, 255, 0.3);
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+    margin-right: 8px;
+    margin-bottom: 6px;
+}
+.dlg-btn:hover:not(:disabled) {
+    background: rgba(190, 200, 255, 0.22);
+    border-color: rgb(190, 200, 255);
+    box-shadow: 0 0 12px rgba(190, 200, 255, 0.2);
+}
+.dlg-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.dlg-btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+/* 进度条 */
+.dlg-progress-wrap {
+    width: 100%;
+    height: 10px;
+    background: rgba(190, 200, 255, 0.08);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 8px;
+    border: 1px solid rgba(190, 200, 255, 0.15);
+}
+.dlg-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, rgba(190,200,255,0.6), rgba(190,200,255,0.9));
+    border-radius: 5px;
+    transition: width 0.2s ease;
+}
+.dlg-progress-text {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 6px;
+}
+
+/* 文本框 */
+.dlg-textarea-wrap {
+    position: relative;
+    margin-top: 10px;
+}
+.dlg-textarea {
+    width: 100%;
+    min-height: 90px;
+    max-height: 160px;
+    padding: 12px 14px;
+    padding-right: 60px;
+    background: rgba(20, 20, 28, 0.7);
+    border: 1px solid rgba(190, 200, 255, 0.18);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.78rem;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    line-height: 1.5;
+    resize: vertical;
+    word-break: break-all;
+}
+.dlg-textarea:focus {
+    outline: none;
+    border-color: rgba(190, 200, 255, 0.45);
+    box-shadow: 0 0 8px rgba(190, 200, 255, 0.12);
+}
+.dlg-textarea-readonly {
+    user-select: none;
+    -webkit-user-select: none;
+}
+.dlg-textarea-readonly:focus {
+    border-color: rgba(190, 200, 255, 0.18);
+    box-shadow: none;
+}
+
+/* 复制按钮 */
+.dlg-copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 5px 12px;
+    background: rgba(190, 200, 255, 0.15);
+    border: 1px solid rgba(190, 200, 255, 0.3);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    z-index: 2;
+}
+.dlg-copy-btn:hover {
+    background: rgba(190, 200, 255, 0.28);
+    border-color: rgb(190, 200, 255);
+}
+.dlg-copy-btn.copied {
+    background: rgba(80, 200, 120, 0.25);
+    border-color: rgba(80, 200, 120, 0.5);
+    color: #a0f0c0;
+}
+
+/* 教程链接 */
+.dlg-tutorial-link {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: rgba(190, 200, 255, 0.7);
+    transition: color 0.2s;
+}
+.dlg-tutorial-link:hover {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
 /* ---------- 响应式 ---------- */
 @media (max-width: 768px) {
     .content-bg {
@@ -269,6 +503,9 @@ body .content-wrapper #app {
         padding: 16px;
     }
     .download-btn { width: 100%; justify-content: center; }
+
+    .dialog-box { padding: 28px 18px 20px 18px; }
+    .dlg-btn { width: 100%; margin-right: 0; }
 }
 
 /* ---------- 滚动条美化 ---------- */
@@ -283,208 +520,3 @@ body .content-wrapper #app {
 /* ---------- 隐藏 docsify 侧边栏开关 ---------- */
 .sidebar-toggle { display: none !important; }
 body { padding-top: 0 !important; }
-
-/* ========== 下载弹窗 ========== */
-.dialog-overlay {
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    z-index: 10000;
-    align-items: center;
-    justify-content: center;
-}
-.dialog-overlay.active {
-    display: flex;
-}
-
-.dialog-box {
-    position: relative;
-    width: 560px;
-    max-width: 92vw;
-    max-height: 85vh;
-    overflow-y: auto;
-    background: rgba(20, 20, 30, 0.92);
-    border: 1px solid rgba(190, 200, 255, 0.25);
-    border-radius: 18px;
-    padding: 32px 28px 28px 28px;
-    box-shadow: 0 16px 64px rgba(0, 0, 0, 0.5), 0 0 40px rgba(190, 200, 255, 0.08);
-}
-
-.dialog-close {
-    position: absolute;
-    top: 14px; right: 16px;
-    width: 32px; height: 32px;
-    border: none;
-    background: rgba(190, 200, 255, 0.1);
-    border-radius: 8px;
-    color: rgb(190, 200, 255);
-    font-size: 1.1rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-.dialog-close:hover {
-    background: rgba(190, 200, 255, 0.25);
-    color: #fff;
-}
-
-.dialog-title {
-    color: rgb(190, 200, 255);
-    font-size: 1.5rem;
-    font-weight: 700;
-    text-shadow: 0 0 12px rgba(190, 200, 255, 0.3);
-    margin-bottom: 6px;
-    text-align: center;
-}
-
-.dialog-desc {
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.88rem;
-    text-align: center;
-    margin-bottom: 24px;
-    line-height: 1.6;
-}
-
-/* ---------- 下载方式块 ---------- */
-.method-block {
-    margin-bottom: 22px;
-    padding: 16px 18px;
-    background: rgba(190, 200, 255, 0.04);
-    border: 1px solid rgba(190, 200, 255, 0.12);
-    border-radius: 12px;
-}
-
-.method-title {
-    color: rgb(190, 200, 255);
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 10px;
-}
-
-.method-row {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-}
-
-.method-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 9px 20px;
-    background: rgba(190, 200, 255, 0.12);
-    border: 1px solid rgba(190, 200, 255, 0.3);
-    border-radius: 8px;
-    color: #ffffff;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.25s;
-    letter-spacing: 0.3px;
-    font-family: inherit;
-}
-.method-btn:hover {
-    background: rgba(190, 200, 255, 0.25);
-    border-color: rgb(190, 200, 255);
-    box-shadow: 0 0 14px rgba(190, 200, 255, 0.2);
-    transform: translateY(-1px);
-}
-.method-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-/* ---------- 进度条 ---------- */
-.progress-bar-container {
-    width: 100%;
-    height: 10px;
-    background: rgba(190, 200, 255, 0.08);
-    border-radius: 5px;
-    overflow: hidden;
-    margin-bottom: 6px;
-    border: 1px solid rgba(190, 200, 255, 0.12);
-}
-
-.progress-bar {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, rgba(190,200,255,0.6), rgba(190,200,255,1));
-    border-radius: 5px;
-    transition: width 0.3s ease;
-    box-shadow: 0 0 8px rgba(190, 200, 255, 0.4);
-}
-
-.progress-text {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 0.78rem;
-    margin-bottom: 4px;
-}
-
-/* ---------- 文本框 ---------- */
-.textarea-wrapper {
-    position: relative;
-    margin-top: 8px;
-    margin-bottom: 6px;
-}
-
-.method-textarea {
-    width: 100%;
-    min-height: 80px;
-    max-height: 140px;
-    padding: 12px 14px;
-    padding-right: 70px;
-    background: rgba(10, 10, 18, 0.8);
-    border: 1px solid rgba(190, 200, 255, 0.15);
-    border-radius: 8px;
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 0.78rem;
-    font-family: 'Consolas', 'Monaco', monospace;
-    resize: vertical;
-    line-height: 1.5;
-    word-break: break-all;
-}
-.method-textarea:focus {
-    outline: none;
-    border-color: rgba(190, 200, 255, 0.4);
-    box-shadow: 0 0 10px rgba(190, 200, 255, 0.1);
-}
-.method-textarea[readonly] {
-    user-select: none;
-    -webkit-user-select: none;
-}
-
-.copy-btn {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    padding: 6px 14px;
-    font-size: 0.78rem;
-}
-
-/* ---------- 教程链接 ---------- */
-.tutorial-link {
-    display: inline-block;
-    margin-top: 6px;
-    color: rgba(190, 200, 255, 0.7);
-    font-size: 0.8rem;
-    text-decoration: underline;
-    transition: color 0.2s;
-}
-.tutorial-link:hover {
-    color: #ffffff;
-}
-
-/* ---------- 弹窗滚动条 ---------- */
-.dialog-box::-webkit-scrollbar { width: 6px; }
-.dialog-box::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 3px; }
-.dialog-box::-webkit-scrollbar-thumb { background: rgba(190,200,255,0.2); border-radius: 3px; }
-.dialog-box::-webkit-scrollbar-thumb:hover { background: rgba(190,200,255,0.35); }
